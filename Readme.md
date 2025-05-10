@@ -66,7 +66,16 @@ In a separate terminal:
 ```bash
 docker-compose exec backend python manage.py migrate
 ```
-
+```bash
+% docker exec -it mqtt-client /bin/sh
+/ # mosquitto_sub -h mosquitto-broker -p 1883 -t home/livingroom/#
+```
+```bash
+docker exec -it iothive_backend_1 sh
+python manage.py shell
+from devices.tasks import simulate_device_activity
+>>> simulate_device_activity.delay()
+```
 ---
 
 ## ⚙️ API Endpoints
