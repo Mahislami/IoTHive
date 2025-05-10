@@ -1,0 +1,13 @@
+# docker-compose-dev.yml
+
+version: '3.8'
+
+services:
+  django:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "pip install django && django-admin startproject iothive . && python manage.py runserver 0.0.0.0:8000"

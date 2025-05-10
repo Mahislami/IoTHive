@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - mosquitto
+    networks:
+      - iothive-network
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    networks:
+      - iothive-network
+
+  celery:
+    build:
+      context: ./backend
+    command: celery -A iothive worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - backend
+      - redis
+      - mosquitto
+    networks:
+      - iothive-network
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto-broker
+    ports:
+      - "1883:1883"  # Standard MQTT port
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf  # Configuration file for Mosquitto
+      - mosquitto-data:/mosquitto/data  # Persistent data storage
+      - mosquitto-log:/mosquitto/log    # Persistent log storage
+    networks:
+      - iothive-network  # Ensure all services communicate via the same network
+  client:
+    build: ./mqtt-client
+    container_name: mqtt-client
+    depends_on:
+      - mosquitto
+    stdin_open: true
+    tty: true
+    networks:
+      - iothive-network  # Ensure all services communicate via the same network
+
+volumes:
+  mosquitto-data:   # Persistent volume for Mosquitto data
+  mosquitto-log:    # Persistent volume for Mosquitto logs
+
+networks:
+  iothive-network:
+    driver: bridge
