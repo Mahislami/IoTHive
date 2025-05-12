@@ -4,3 +4,4 @@ gunicorn
 paho-mqtt
 celery
 redis
+django-cors-headers

@@ -40,6 +40,7 @@ services:
     container_name: mosquitto-broker
     ports:
       - "1883:1883"  # Standard MQTT port
+      - "9001:9001"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf  # Configuration file for Mosquitto
       - mosquitto-data:/mosquitto/data  # Persistent data storage
@@ -55,6 +56,14 @@ services:
     tty: true
     networks:
       - iothive-network  # Ensure all services communicate via the same network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   mosquitto-data:   # Persistent volume for Mosquitto data
