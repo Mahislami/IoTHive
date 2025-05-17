@@ -1,0 +1,48 @@
+body {
+    background-color: #0d1117;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 0;
+    padding: 0;
+  }
+  
+  h1, h2, h3 {
+    color: #0ff;
+    text-shadow: 0 0 5px #0ff;
+  }
+  
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    padding: 40px;
+  }
+  
+  .card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid #0ff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 20px #0ff3;
+  }
+  
+  button {
+    background: #0ff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 10px #0ff;
+  }
+  
+  button:hover {
+    background: #0cc;
+    box-shadow: 0 0 20px #0ff;
+  }
+  
+  input[type='range'] {
+    width: 100%;
+    accent-color: #f0f;
+  }
+  
