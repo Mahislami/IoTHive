@@ -1,0 +1,176 @@
+{
+    "id": null,
+    "title": "IoT Device Dashboard (All Metrics)",
+    "timezone": "browser",
+    "schemaVersion": 37,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "type": "gauge",
+        "title": "Sensor Reading",
+        "targets": [
+          {
+            "refId": "A",
+            "query": "from(bucket: \"iot_bucket\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"mqtt_consumer\") |> filter(fn: (r) => r._field == \"reading\") |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "none"
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "last"
+            ]
+          },
+          "showThresholdMarkers": true,
+          "showThresholdLabels": false
+        },
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 8,
+          "h": 6
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Temperature Over Time",
+        "targets": [
+          {
+            "refId": "B",
+            "query": "from(bucket: \"iot_bucket\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"mqtt_consumer\") |> filter(fn: (r) => r._field == \"temperature\")"
+          }
+        ],
+        "gridPos": {
+          "x": 8,
+          "y": 0,
+          "w": 16,
+          "h": 8
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Light Status",
+        "targets": [
+          {
+            "refId": "C",
+            "query": "from(bucket: \"iot_bucket\") |> range(start: -5m) |> filter(fn: (r) => r.topic == \"home/livingroom/light\") |> filter(fn: (r) => r._field == \"status\") |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "1": {
+                    "text": "ON"
+                  },
+                  "0": {
+                    "text": "OFF"
+                  }
+                }
+              }
+            ]
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "last"
+            ]
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "x": 0,
+          "y": 6,
+          "w": 8,
+          "h": 4
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Switch State",
+        "targets": [
+          {
+            "refId": "D",
+            "query": "from(bucket: \"iot_bucket\") |> range(start: -5m) |> filter(fn: (r) => r.topic == \"home/livingroom/switch\") |> filter(fn: (r) => r._field == \"state\") |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "1": {
+                    "text": "ON"
+                  },
+                  "0": {
+                    "text": "OFF"
+                  }
+                }
+              }
+            ]
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "last"
+            ]
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "x": 8,
+          "y": 6,
+          "w": 8,
+          "h": 4
+        }
+      },
+      {
+        "type": "gauge",
+        "title": "Actuator Position",
+        "targets": [
+          {
+            "refId": "E",
+            "query": "from(bucket: \"iot_bucket\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"mqtt_consumer\") |> filter(fn: (r) => r._field == \"position\") |> last()"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent"
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "last"
+            ]
+          },
+          "showThresholdMarkers": true,
+          "showThresholdLabels": true
+        },
+        "gridPos": {
+          "x": 16,
+          "y": 6,
+          "w": 8,
+          "h": 4
+        }
+      }
+    ]
+  }
