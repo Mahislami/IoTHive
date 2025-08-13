@@ -5,10 +5,33 @@ from .models import UserProfile
 from .models import Device
 from django.db import transaction
 
+from django import forms
+from .models import Device
+
 class DeviceForm(forms.ModelForm):
+    # JSONField in a form gives validation; keep it optional
+    metadata = forms.JSONField(required=False)
+
     class Meta:
         model = Device
-        fields = '__all__'  # or specify fields manually like ['name', 'device_type', 'location']
+        fields = ["name", "device_type", "status", "topic", "metadata"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        base = (
+            "w-full px-4 py-2 border border-[color:var(--border)] "
+            "bg-[color:var(--bg-base)] text-[color:var(--text-primary)] "
+            "rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]"
+        )
+        # Style all widgets
+        for name, field in self.fields.items():
+            cls = field.widget.attrs.get("class", "")
+            field.widget.attrs["class"] = (cls + " " + base).strip()
+
+        # Placeholders (optional)
+        self.fields["name"].widget.attrs["placeholder"] = "Kitchen Temperature"
+        self.fields["topic"].widget.attrs["placeholder"] = "sensors/kitchen/temp"
+
 
 class SignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)

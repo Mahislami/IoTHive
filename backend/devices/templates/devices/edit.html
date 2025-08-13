@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Edit{% else %}Create{% endif %} Device{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto px-6 py-10">
+  <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+    <h1 class="text-2xl font-bold mb-6">
+      {% if object %}Edit {{ object.name }}{% else %}Create Device{% endif %}
+    </h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.name.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Type</label>
+        {{ form.device_type }}
+        {% if form.device_type.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.device_type.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Status</label>
+        {{ form.status }}
+        {% if form.status.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.status.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Topic</label>
+        {{ form.topic }}
+        {% if form.topic.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.topic.errors.0 }}</p>{% endif %}
+        <p class="text-xs text-[color:var(--text-secondary)] mt-1">MQTT topic that this device publishes to.</p>
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Metadata (JSON)</label>
+        {{ form.metadata }}
+        {% if form.metadata.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.metadata.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="mt-6 flex items-center gap-3">
+        <button type="submit"
+                class="px-4 py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700">
+          Save
+        </button>
+        <a href="{% url 'devices:list' %}"
+           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

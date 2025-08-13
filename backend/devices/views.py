@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from rest_framework import generics
 from .models import Device
@@ -13,8 +13,18 @@ from django.contrib.auth.models import User
 from django.views.generic import ListView, DetailView
 import json
 from .models import Device, UserProfile
-from .permissions import role_required
+from users.permissions import role_required
 from django.urls import reverse
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.db.models import Q
+from django.urls import reverse_lazy
+from django.contrib import messages
+
+
+from .models import Device
+from .forms import DeviceForm
+from .permissions import role_required  # or from users.permissions import role_required
+
 
 # Existing API views
 class DeviceCreateView(generics.CreateAPIView):
@@ -26,16 +36,65 @@ class DeviceListView(generics.ListAPIView):
     serializer_class = DeviceSerializer
 
 # New form-based device registration view
+@method_decorator(login_required, name="dispatch")
+class DeviceListView(ListView):
+    model = Device
+    template_name = "devices/list.html"
+    context_object_name = "devices"
+    paginate_by = 20
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(topic__icontains=q) |
+                Q(device_type__icontains=q)
+            )
+        return qs
+
+
+@method_decorator(login_required, name="dispatch")
+class DeviceDetailView(DetailView):
+    model = Device
+    template_name = "devices/detail.html"
+    context_object_name = "device"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        meta = self.object.metadata or {}
+        ctx["metadata_pretty"] = json.dumps(meta, indent=2, ensure_ascii=False)
+        return ctx
+
+
+@method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
+class DeviceCreateView(CreateView):
+    model = Device
+    form_class = DeviceForm
+    template_name = "devices/edit.html"
+    success_url = reverse_lazy("devices:list")
+
+
+@method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
+class DeviceUpdateView(UpdateView):
+    model = Device
+    form_class = DeviceForm
+    template_name = "devices/edit.html"
+    success_url = reverse_lazy("devices:list")
+
+
 @login_required
-def register_device_view(request):
-    if request.method == 'POST':
-        form = DeviceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('register_device')
-    else:
-        form = DeviceForm()
-    return render(request, 'register_device.html', {'form': form})
+@role_required("admin", "operator")
+def device_delete(request, pk):
+    device = get_object_or_404(Device, pk=pk)
+    if request.method == "POST":
+        device.delete()
+        messages.success(request, "Device deleted.")
+        return redirect("devices:list")
+    # Fallback confirm if someone GETs the URL
+    return render(request, "devices/confirm_delete.html", {"device": device})
 
 def signup_view(request):
     if request.method == 'POST':
@@ -43,7 +102,6 @@ def signup_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            print("DDddlllllllaallalMMMNN")
             user.save()
 
             # set role on profile (create or update)
@@ -72,7 +130,7 @@ def dashboard_view(request):
         {
             "key": "grafana",
             "label": "Grafana Dashboard",
-            "href": "https://grafana.example.com",  # TODO: replace
+            "href": "http://localhost:3000/login",  # TODO: replace
             "desc": "View metrics and charts",
             "icon": "activity",
         }
@@ -86,6 +144,12 @@ def dashboard_view(request):
             "desc": "Add, remove, or edit devices",
             "icon": "cpu",
         })
+        menu.insert(1, {  # 👈 NEW: New Device card
+            "key": "device_new",
+            "label": "New Device",
+            "href": reverse("devices:create"),
+            "desc": "Create a new device",
+        })
 
     if role == "admin":
         menu.append({
@@ -93,6 +157,12 @@ def dashboard_view(request):
             "label": "Manage Users",
             "href": reverse("users:list"),
             "desc": "Create, disable, or edit users",
+        })
+        menu.append({     # 👈 NEW: New User card
+            "key": "user_new",
+            "label": "New User",
+            "href": reverse("users:create"),
+            "desc": "Create a new user",
         })
 
     context = {

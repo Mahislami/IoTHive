@@ -7,6 +7,8 @@ from django.views.generic import UpdateView
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.views.generic import CreateView
+from .forms import UserCreateForm
 
 from .forms import UserAdminForm
 from .permissions import role_required
@@ -67,3 +69,9 @@ def user_delete(request, pk):
         return redirect("users:list")
     # fallback confirm page if someone GETs this URL
     return render(request, "users/confirm_delete.html", {"u": u})
+
+@method_decorator([login_required, role_required("admin")], name="dispatch")
+class UserCreateView(CreateView):
+    form_class = UserCreateForm
+    template_name = "users/create.html"
+    success_url = reverse_lazy("users:list")

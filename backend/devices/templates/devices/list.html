@@ -1,68 +1,98 @@
-{% extends "base.html" %} {# or include your Tailwind + :root directly #}
+{% extends "base.html" %}
+{% block title %}Devices{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto px-6 py-10">
 
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">Devices</h1>
-    <form method="get" class="w-full max-w-sm">
-      <input name="q" value="{{ request.GET.q }}"
-             class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
-                    text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
-                    focus:ring-[color:var(--accent-primary)]"
-             placeholder="Search by name, topic, or type">
-    </form>
-  </div>
-
-  <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-    {% for d in devices %}
-      <a href="{% url 'app:devices_detail' d.pk %}"
-         class="block bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6
-                hover:border-[color:var(--accent-primary)] transition">
-        <div class="flex items-start justify-between">
-          <div>
-            <h3 class="text-lg font-semibold">{{ d.name }}</h3>
-            <p class="text-sm text-[color:var(--text-secondary)]">{{ d.topic }}</p>
-          </div>
-          <span class="text-xs px-2 py-1 rounded-md border border-[color:var(--border)]">
-            {{ d.get_device_type_display }}
-          </span>
-        </div>
-
-        <div class="mt-4 flex items-center gap-3">
-          {% if d.status %}
-            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-success)]"></span>
-            <span class="text-sm text-[color:var(--text-secondary)]">On</span>
-          {% else %}
-            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-error)]"></span>
-            <span class="text-sm text-[color:var(--text-secondary)]">Off</span>
-          {% endif %}
-        </div>
-
-        <p class="mt-4 text-xs text-[color:var(--text-secondary)]">
-          Created {{ d.created_at|date:"Y-m-d H:i" }}
-        </p>
+    <div class="flex items-center gap-3">
+      <form method="get" class="w-full max-w-sm">
+        <input name="q" value="{{ request.GET.q }}"
+               class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
+                      text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
+                      focus:ring-[color:var(--accent-primary)]"
+               placeholder="Search by name, topic, or type">
+      </form>
+      {% if request.user.userprofile.role in "admin operator" %}
+      <a href="{% url 'devices:create' %}"
+         class="px-3 py-2 rounded-lg bg-[color:var(--accent-primary)] text-white hover:bg-indigo-700">
+        New Device
       </a>
-    {% empty %}
-      <div class="col-span-full text-[color:var(--text-secondary)]">
-        No devices found.
-      </div>
-    {% endfor %}
-  </section>
-
-  {% if is_paginated %}
-    <div class="mt-8 flex items-center gap-2">
-      {% if page_obj.has_previous %}
-        <a class="px-3 py-1 rounded-lg border border-[color:var(--border)]"
-           href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Prev</a>
-      {% endif %}
-      <span class="text-sm text-[color:var(--text-secondary)]">
-        Page {{ page_obj.number }} of {{ paginator.num_pages }}
-      </span>
-      {% if page_obj.has_next %}
-        <a class="px-3 py-1 rounded-lg border border-[color:var(--border)]"
-           href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
       {% endif %}
     </div>
-  {% endif %}
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border border-[color:var(--border)]">
+    <table class="min-w-full bg-[color:var(--surface)] text-sm">
+      <thead class="text-left text-[color:var(--text-secondary)] border-b border-[color:var(--border)]">
+        <tr>
+          <th class="px-4 py-3">Name</th>
+          <th class="px-4 py-3">Type</th>
+          <th class="px-4 py-3">Topic</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3">Created</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in devices %}
+          <tr class="border-b border-[color:var(--border)] hover:bg-[color:var(--bg-base)]">
+            <td class="px-4 py-3">
+              <a class="hover:underline" href="{% url 'devices:detail' d.pk %}">{{ d.name }}</a>
+            </td>
+            <td class="px-4 py-3">{{ d.get_device_type_display }}</td>
+            <td class="px-4 py-3 font-mono text-xs">{{ d.topic }}</td>
+            <td class="px-4 py-3">
+              {% if d.status %}
+                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-success)] mr-2"></span>On
+              {% else %}
+                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-error)] mr-2"></span>Off
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">{{ d.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="px-4 py-3">
+              <div class="flex justify-end">
+                <details class="relative">
+                  <summary class="list-none cursor-pointer rounded-md p-2 hover:bg-[color:var(--bg-base)]">
+                    <!-- vertical dots -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="1.5"></circle>
+                      <circle cx="12" cy="12" r="1.5"></circle>
+                      <circle cx="12" cy="19" r="1.5"></circle>
+                    </svg>
+                  </summary>
+                  <ul class="absolute right-0 mt-2 w-44 rounded-xl border border-[color:var(--border)]
+                             bg-[color:var(--surface)] shadow-lg z-10">
+                    <li>
+                      <a href="{% url 'devices:detail' d.pk %}"
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Open</a>
+                    </li>
+                    {% if request.user.userprofile.role in "admin operator" %}
+                    <li class="border-t border-[color:var(--border)]">
+                      <a href="{% url 'devices:edit' d.pk %}"
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>
+                    </li>
+                    <li class="border-t border-[color:var(--border)]">
+                      <form method="post" action="{% url 'devices:delete' d.pk %}"
+                            onsubmit="return confirm('Delete {{ d.name }}?');">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full text-left px-4 py-2 text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">
+                          Delete
+                        </button>
+                      </form>
+                    </li>
+                    {% endif %}
+                  </ul>
+                </details>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="px-4 py-6 text-[color:var(--text-secondary)]">No devices.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

@@ -2,15 +2,24 @@
 {% block title %}Users{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto px-6 py-10">
+
+  <!-- Header: title + search + New User -->
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">Users</h1>
-    <form method="get" class="w-full max-w-sm">
-      <input name="q" value="{{ request.GET.q }}"
-             class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
-                    text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
-                    focus:ring-[color:var(--accent-primary)]"
-             placeholder="Search by username, email, or role">
-    </form>
+    <div class="flex items-center gap-3 w-full max-w-xl">
+      <form method="get" class="flex-1">
+        <input name="q" value="{{ request.GET.q }}"
+               class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
+                      text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
+                      focus:ring-[color:var(--accent-primary)]"
+               placeholder="Search by username, email, or role">
+      </form>
+      <!-- New User button (page is admin-only, but keep explicit) -->
+      <a href="{% url 'users:create' %}"
+         class="px-3 py-2 rounded-lg bg-[color:var(--accent-primary)] text-white hover:bg-indigo-700 transition">
+        New User
+      </a>
+    </div>
   </div>
 
   <div class="overflow-hidden rounded-2xl border border-[color:var(--border)]">
@@ -36,16 +45,16 @@
             <td class="px-4 py-3">
               <div class="flex justify-end">
                 <details class="relative">
-                  <summary class="list-none cursor-pointer rounded-md p-2 hover:bg-[color:var(--bg-base)]">
+                  <summary class="list-none cursor-pointer rounded-md p-2 hover:bg-[color:var(--bg-base)]" aria-label="Actions">
                     <!-- vertical dots icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <circle cx="12" cy="5" r="1.5"></circle>
                       <circle cx="12" cy="12" r="1.5"></circle>
                       <circle cx="12" cy="19" r="1.5"></circle>
                     </svg>
                   </summary>
                   <ul class="absolute right-0 mt-2 w-40 rounded-xl border border-[color:var(--border)]
-                             bg-[color:var(--surface)] shadow-lg z-10">
+                             bg-[color:var(--surface)] shadow-lg z-10 overflow-hidden">
                     <li>
                       <a href="{% url 'users:edit' u.pk %}"
                          class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>
@@ -66,10 +75,27 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="px-4 py-6 text-[color:var(--text-secondary)]">No users.</td></tr>
+          <tr>
+            <td colspan="5" class="px-4 py-6 text-[color:var(--text-secondary)]">No users.</td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  {% if is_paginated %}
+    <div class="mt-6 flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+      {% if page_obj.has_previous %}
+        <a class="px-3 py-1 rounded-lg border border-[color:var(--border)]"
+           href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Prev</a>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="px-3 py-1 rounded-lg border border-[color:var(--border)]"
+           href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
 </div>
 {% endblock %}
