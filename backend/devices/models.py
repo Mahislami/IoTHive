@@ -17,6 +17,7 @@ class Device(models.Model):
     status = models.BooleanField(default=False)  # Example: On/Off
     topic = models.CharField(max_length=255, unique=True)  # MQTT topic
     created_at = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(blank=True, null=True)  # ✅ Add this field
 
     def __str__(self):
         return f"{self.name} ({self.device_type})"

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-base: #121212;
+      --surface: #1E1E2F;
+      --border: #2A2A3C;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B0B0C3;
+      --accent-primary: #6366F1;
+      --accent-success: #2DD4BF;
+      --accent-warning: #FBBF24;
+      --accent-error: #F43F5E;
+      --accent-info: #38BDF8;
+      --line: #3A3A50;
+    }
+    @keyframes fade-in { from {opacity:0; transform: translateY(10px)} to {opacity:1; transform: translateY(0)} }
+    .animate-fade-in { animation: fade-in .5s ease-out }
+  </style>
+</head>
+<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
+  <header class="border-b border-[color:var(--line)]">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-semibold">Welcome, {{ user_display }}</h1>
+      <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
+        <span class="px-2 py-1 rounded-md border border-[color:var(--border)]">
+          Role: <span class="font-medium capitalize">{{ role }}</span>
+        </span>
+        <a href="{% url 'logout' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">
+          Logout
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
+      <h2 class="text-2xl font-bold mb-2">Dashboard</h2>
+      <p class="text-[color:var(--text-secondary)]">Quick actions based on your role.</p>
+    </div>
+
+    <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {% for item in menu %}
+        <a href="{{ item.href }}" class="block group bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 hover:border-[color:var(--accent-primary)] transition animate-fade-in">
+          <div class="flex items-start justify-between">
+            <h3 class="text-lg font-semibold">{{ item.label }}</h3>
+            <!-- Simple icon dot -->
+            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-primary)] mt-2 group-hover:scale-125 transition"></span>
+          </div>
+          <p class="mt-2 text-sm text-[color:var(--text-secondary)]">{{ item.desc }}</p>
+          <div class="mt-5">
+            <span class="inline-flex items-center px-3 py-1 rounded-lg bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+              Open
+            </span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="col-span-full text-[color:var(--text-secondary)]">
+          No actions available for your role.
+        </div>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>

@@ -6,6 +6,9 @@ import paho.mqtt.publish as publish
 
 MQTT_BROKER = 'mosquitto-broker'
 MQTT_PORT = 1883
+# Define actuator movement bounds (room size)
+ROOM_WIDTH = 10
+ROOM_HEIGHT = 10
 
 @shared_task
 def simulate_device_activity():
@@ -28,7 +31,6 @@ def simulate_device_activity():
             device.save()
             payload["status"] = new_status
             
-
         elif device.device_type == 'switch':
             payload["state"] = random.choice([0, 1])
 
@@ -36,7 +38,29 @@ def simulate_device_activity():
             payload["temperature"] = round(random.uniform(18.0, 25.0), 1)
 
         elif device.device_type == 'actuator':
-            payload["position"] = random.randint(0, 100)
+        # Initialize coordinates in device.metadata if needed
+            if not device.metadata:
+                device.metadata = json.dumps({"x": random.randint(0, ROOM_WIDTH), "y": random.randint(0, ROOM_HEIGHT)})
+    
+            meta = json.loads(device.metadata)
+            x = meta.get("x", 0)
+            y = meta.get("y", 0)
+
+            # Simulate small movement
+            dx = random.choice([-1, 0, 1])
+            dy = random.choice([-1, 0, 1])
+            new_x = max(0, min(ROOM_WIDTH, x + dx))
+            new_y = max(0, min(ROOM_HEIGHT, y + dy))
+
+            # Update metadata
+            meta["x"] = new_x
+            meta["y"] = new_y
+            device.metadata = json.dumps(meta)
+            device.save()
+
+            payload["x"] = new_x
+            payload["y"] = new_y
+            payload["position"] = int((new_x + new_y) / 2 * 10)  # Optional: combined "position" metric
 
         else:
             payload["message"] = "Unknown device update"

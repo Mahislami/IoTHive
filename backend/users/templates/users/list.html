@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Users</h1>
+    <form method="get" class="w-full max-w-sm">
+      <input name="q" value="{{ request.GET.q }}"
+             class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
+                    text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
+                    focus:ring-[color:var(--accent-primary)]"
+             placeholder="Search by username, email, or role">
+    </form>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border border-[color:var(--border)]">
+    <table class="min-w-full bg-[color:var(--surface)] text-sm">
+      <thead class="text-left text-[color:var(--text-secondary)] border-b border-[color:var(--border)]">
+        <tr>
+          <th class="px-4 py-3">Username</th>
+          <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3">Role</th>
+          <th class="px-4 py-3">Joined</th>
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr class="border-b border-[color:var(--border)] hover:bg-[color:var(--bg-base)]">
+            <td class="px-4 py-3">
+              <a class="hover:underline" href="{% url 'users:detail' u.pk %}">{{ u.username }}</a>
+            </td>
+            <td class="px-4 py-3">{{ u.email|default:"—" }}</td>
+            <td class="px-4 py-3 capitalize">{{ u.userprofile.role|default:"visitor" }}</td>
+            <td class="px-4 py-3">{{ u.date_joined|date:"Y-m-d" }}</td>
+            <td class="px-4 py-3">
+              <div class="flex justify-end">
+                <details class="relative">
+                  <summary class="list-none cursor-pointer rounded-md p-2 hover:bg-[color:var(--bg-base)]">
+                    <!-- vertical dots icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="1.5"></circle>
+                      <circle cx="12" cy="12" r="1.5"></circle>
+                      <circle cx="12" cy="19" r="1.5"></circle>
+                    </svg>
+                  </summary>
+                  <ul class="absolute right-0 mt-2 w-40 rounded-xl border border-[color:var(--border)]
+                             bg-[color:var(--surface)] shadow-lg z-10">
+                    <li>
+                      <a href="{% url 'users:edit' u.pk %}"
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>
+                    </li>
+                    <li class="border-t border-[color:var(--border)]">
+                      <form method="post" action="{% url 'users:delete' u.pk %}"
+                            onsubmit="return confirm('Delete {{ u.username }}?');">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full text-left px-4 py-2 text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">
+                          Delete
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </details>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="px-4 py-6 text-[color:var(--text-secondary)]">No users.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

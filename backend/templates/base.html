@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}App{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-base: #121212;
+      --surface: #1E1E2F;
+      --border: #2A2A3C;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B0B0C3;
+      --accent-primary: #6366F1;
+      --accent-success: #2DD4BF;
+      --accent-warning: #FBBF24;
+      --accent-error: #F43F5E;
+      --accent-info: #38BDF8;
+      --line: #3A3A50;
+    }
+    @keyframes fade-in { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
+    .animate-fade-in { animation: fade-in .5s ease-out }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
+  <header class="border-b border-[color:var(--line)]">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="{% url 'dashboard' %}" class="font-semibold">Home</a>
+      {% if request.user.is_authenticated %}
+        <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
+          <span>{{ request.user.username }}</span>
+          <a href="{% url 'logout' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Logout</a>
+        </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

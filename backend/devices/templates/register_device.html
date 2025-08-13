@@ -1,7 +1,82 @@
-<h2>Register Device</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit</button>
-</form>
-<a href="{% url 'logout' %}">Logout</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Device</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg-base: #121212;
+      --surface: #1E1E2F;
+      --border: #2A2A3C;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B0B0C3;
+      --text-disabled: #6C6C80;
+      --line: #3A3A50;
+      --accent-primary: #6366F1;
+      --accent-success: #2DD4BF;
+      --accent-warning: #FBBF24;
+      --accent-error: #F43F5E;
+      --accent-info: #38BDF8;
+    }
+  </style>
+</head>
+<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] flex items-center justify-center min-h-screen">
+  <div class="bg-[color:var(--surface)] shadow-xl rounded-2xl p-10 w-full max-w-md animate-fade-in border border-[color:var(--border)]">
+    <h2 class="text-3xl font-bold text-center mb-8">Register Device</h2>
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">{{ field.label }}</label>
+          {% if field.name == 'type' %}
+            <div class="relative">
+              <select 
+                name="{{ field.name }}" 
+                id="{{ field.id_for_label }}" 
+                class="appearance-none w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)] pr-10"
+                required>
+                <option value="">Select Type</option>
+                <option value="light" {% if field.value == 'light' %}selected{% endif %}>Light</option>
+                <option value="actuator" {% if field.value == 'actuator' %}selected{% endif %}>Actuator</option>
+                <option value="sensor" {% if field.value == 'sensor' %}selected{% endif %}>Sensor</option>
+                <option value="thermostat" {% if field.value == 'thermostat' %}selected{% endif %}>Thermostat</option>
+                <option value="temperature" {% if field.value == 'temperature' %}selected{% endif %}>Temperature</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[color:var(--text-secondary)]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+          {% else %}
+            <input 
+              type="{{ field.field.widget.input_type|default:'text' }}" 
+              name="{{ field.name }}" 
+              id="{{ field.id_for_label }}" 
+              value="{{ field.value|default:'' }}" 
+              class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]"
+              {% if field.field.required %}required{% endif %}>
+          {% endif %}
+          {% if field.errors %}
+            <p class="text-sm text-[color:var(--accent-error)] mt-1">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="w-full py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300">Submit</button>
+    </form>
+    <div class="text-center mt-6">
+      <a href="{% url 'logout' %}" class="text-sm text-[color:var(--accent-info)] hover:underline">Logout</a>
+    </div>
+  </div>
+
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.5s ease-out;
+    }
+  </style>
+</body>
+</html>

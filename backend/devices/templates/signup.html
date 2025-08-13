@@ -1,6 +1,76 @@
-<h2>Sign Up</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign Up</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg-base:#121212; --surface:#1E1E2F; --border:#2A2A3C;
+      --text-primary:#FFFFFF; --text-secondary:#B0B0C3;
+      --accent-primary:#6366F1; --accent-error:#F43F5E; --accent-info:#38BDF8;
+    }
+    @keyframes fade-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .animate-fade-in{animation:fade-in .5s ease-out}
+  </style>
+</head>
+<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] flex items-center justify-center min-h-screen">
+  <div class="bg-[color:var(--surface)] shadow-xl rounded-2xl p-10 w-full max-w-md animate-fade-in border border-[color:var(--border)]">
+    <h2 class="text-3xl font-bold text-center mb-8">Create Account</h2>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">
+          {{ form.username.label }}
+        </label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <p class="text-[color:var(--accent-error)] text-sm">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">
+          {{ form.email.label }}
+        </label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <p class="text-[color:var(--accent-error)] text-sm">{{ form.email.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">
+          {{ form.password.label }}
+        </label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <p class="text-[color:var(--accent-error)] text-sm">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">
+          {{ form.role.label }}
+        </label>
+        {{ form.role }}
+        {% if form.role.errors %}
+          <p class="text-[color:var(--accent-error)] text-sm">{{ form.role.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="w-full py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300">
+        Sign Up
+      </button>
+    </form>
+
+    <p class="text-sm text-center text-[color:var(--text-secondary)] mt-6">
+      Already have an account?
+      <a href="{% url 'login' %}" class="text-[color:var(--accent-info)] hover:underline">Login</a>
+    </p>
+  </div>
+</body>
+</html>

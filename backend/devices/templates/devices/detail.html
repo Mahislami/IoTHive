@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-10">
+  <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">{{ device.name }}</h1>
+        <p class="text-sm text-[color:var(--text-secondary)]">{{ device.topic }}</p>
+      </div>
+      <span class="text-xs px-2 py-1 rounded-md border border-[color:var(--border)]">
+        {{ device.get_device_type_display }}
+      </span>
+    </div>
+
+    <div class="mt-6 grid sm:grid-cols-2 gap-4 text-sm">
+      <div class="p-4 rounded-xl border border-[color:var(--border)]">
+        <div class="text-[color:var(--text-secondary)]">Status</div>
+        <div class="mt-1 flex items-center gap-2">
+          {% if device.status %}
+            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-success)]"></span> On
+          {% else %}
+            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-error)]"></span> Off
+          {% endif %}
+        </div>
+      </div>
+      <div class="p-4 rounded-xl border border-[color:var(--border)]">
+        <div class="text-[color:var(--text-secondary)]">Created</div>
+        <div class="mt-1">{{ device.created_at|date:"Y-m-d H:i" }}</div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="text-[color:var(--text-secondary)] mb-2 text-sm">Metadata</div>
+      <pre class="text-sm bg-[color:var(--bg-base)] border border-[color:var(--border)] rounded-xl p-4 overflow-x-auto">{{ metadata_pretty }}</pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
