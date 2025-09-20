@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from .utils import publish_device_update_like_simulator
 from rest_framework import generics
 from .models import Device
 from .serializers import DeviceSerializer
@@ -83,6 +84,20 @@ class DeviceUpdateView(UpdateView):
     form_class = DeviceForm
     template_name = "devices/edit.html"
     success_url = reverse_lazy("devices:list")
+
+    def form_valid(self, form):
+        # Determine if status changed so we don’t spam MQTT on unrelated edits
+        status_changed = "status" in form.changed_data
+        response = super().form_valid(form)  # saves self.object
+
+        if status_changed:
+            device = self.object
+            try:
+                publish_device_update_like_simulator(device)
+                messages.success(self.request, "Device updated and MQTT message published.")
+            except Exception as e:
+                messages.error(self.request, f"Device saved, but MQTT publish failed: {e}")
+        return response
 
 
 @login_required
