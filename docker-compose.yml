@@ -35,18 +35,32 @@ services:
     networks:
       - iothive-network
 
+  # NEW: Celery Beat scheduler (triggers periodic tasks every 10s)
+  celery-beat:
+    build:
+      context: ./backend
+    command: celery -A iothive beat -l info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - iothive-network
+
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: mosquitto-broker
     ports:
-      - "1883:1883"  # Standard MQTT port
+      - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf  # Configuration file for Mosquitto
-      - mosquitto-data:/mosquitto/data  # Persistent data storage
-      - mosquitto-log:/mosquitto/log    # Persistent log storage
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
     networks:
-      - iothive-network  # Ensure all services communicate via the same network
+      - iothive-network
+
   client:
     build: ./mqtt-client
     container_name: mqtt-client
@@ -55,7 +69,8 @@ services:
     stdin_open: true
     tty: true
     networks:
-      - iothive-network  # Ensure all services communicate via the same network
+      - iothive-network
+
   influxdb:
     image: influxdb:2.7
     container_name: influxdb
@@ -96,7 +111,6 @@ services:
     depends_on:
       - influxdb
 
-
 #  frontend:
 #    build:
 #      context: ./frontend
@@ -106,8 +120,8 @@ services:
 #      - backend
 
 volumes:
-  mosquitto-data:   # Persistent volume for Mosquitto data
-  mosquitto-log:    # Persistent volume for Mosquitto logs
+  mosquitto-data:
+  mosquitto-log:
   influxdb_data:
   grafana_data:
 
