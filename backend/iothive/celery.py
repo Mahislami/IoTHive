@@ -32,4 +32,9 @@ app.conf.beat_schedule = {
         'task': 'devices.tasks.initialize_device_state',
         'schedule': crontab(hour=0, minute=0),
     },
+
+    "evaluate-alarms-every-10s": {
+    "task": "your_app.evaluate_alarms_task",
+    "schedule": 10.0,  # seconds; can also use timedelta(seconds=10)
+    },
 }

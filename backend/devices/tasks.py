@@ -4,6 +4,10 @@ from .models import Device
 import random
 import json
 import paho.mqtt.publish as publish
+from django.db.models import Exists, OuterRef
+from django.core.cache import cache
+from .models import Device, AlarmRule
+from .alarms import evaluate_device_alarms
 
 # --- MQTT config (same as before) ---
 MQTT_BROKER = 'mosquitto-broker'
@@ -231,3 +235,39 @@ def tick_dynamic_devices():
 
         _pub(topic, payload)
         print(f"[TICK] Published to {topic}: {payload}")
+
+@shared_task
+def evaluate_alarms_task():
+    """
+    Runs every 10 seconds. Evaluates only devices that have at least one active rule.
+    Uses a short cache-based lock so tasks don't overlap if a previous run is slow.
+    """
+    # Optional lock (works best if you use django-redis as your CACHES backend)
+    lock = getattr(cache, "lock", None)
+    if lock:
+        with cache.lock("alarms:evaluate", timeout=20, blocking_timeout=0):
+            _evaluate_all()
+    else:
+        # Fallback without a lock
+        _evaluate_all()
+
+
+def _evaluate_all():
+    # Prefilter to devices that *have* active rules (faster than iterating all)
+    active_rule_subq = AlarmRule.objects.filter(device_id=OuterRef('pk'), active=True)
+    qs = (Device.objects
+          .annotate(has_active_rule=Exists(active_rule_subq))
+          .filter(has_active_rule=True)
+          .order_by('id'))
+
+    # Iterate in chunks to keep memory small if you have many devices
+    batch_size = 200
+    start = 0
+    while True:
+        batch = list(qs[start:start+batch_size])
+        if not batch:
+            break
+        for device in batch:
+            # No DB transaction needed around the whole loop; the evaluator creates/clears events
+            evaluate_device_alarms(device)
+        start += batch_size

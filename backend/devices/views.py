@@ -20,6 +20,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.contrib import messages
+from .models import Device, UserProfile, AlarmRule, AlarmEvent  # add AlarmRule, AlarmEvent
+from django.views.decorators.http import require_POST, require_GET
 
 
 from .models import Device
@@ -165,6 +167,18 @@ def dashboard_view(request):
             "href": reverse("devices:create"),
             "desc": "Create a new device",
         })
+        menu.append({
+        "key": "alarm_rules",
+        "label": "Alarm Rules",
+        "href": reverse("devices:alarm_rules"),
+        "desc": "Set thresholds / states per device",
+        })
+        menu.append({
+        "key": "active_alarms",
+        "label": "Active Alarms",
+        "href": reverse("devices:active_alarms"),
+        "desc": "See and manage raised alarms",
+        })
 
     if role == "admin":
         menu.append({
@@ -260,3 +274,89 @@ class UserDetailView(DetailView):
         # convenient alias to avoid template errors if no profile exists yet
         ctx["profile"] = getattr(self.object, "userprofile", None)
         return ctx
+
+
+@login_required
+@role_required("admin", "operator")
+@require_GET
+def alarm_rules(request):
+    # Devices + a map of active rule per device (single rule per device UX)
+    devices = Device.objects.all().order_by("name")
+    rules_map = {r.device_id: r for r in AlarmRule.objects.filter(active=True)}
+    return render(
+        request,
+        "devices/monitoring/alarm_rules.html",
+        {
+            "devices": devices,
+            "rules_map": rules_map,
+            "user_display": request.user.username,  # for header (same as dashboard)
+            "role": getattr(getattr(request.user, "userprofile", None), "role", "visitor"),
+        },
+    )
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def save_alarm_rule(request):
+    device = get_object_or_404(Device, id=request.POST.get("device_id"))
+    rule, _ = AlarmRule.objects.get_or_create(device=device, defaults={"created_by": request.user})
+
+    # numeric (sensor/thermostat) vs boolean (switch/light/actuator)
+    if device.device_type in ("sensor", "thermostat"):
+        mn = request.POST.get("min_value") or None
+        mx = request.POST.get("max_value") or None
+        rule.min_value = float(mn) if mn is not None else None
+        rule.max_value = float(mx) if mx is not None else None
+        rule.expected_state = None
+    else:
+        es = request.POST.get("expected_state")
+        rule.expected_state = (es == "on") if es in ("on", "off") else None
+        rule.min_value = None
+        rule.max_value = None
+
+    rule.severity = request.POST.get("severity", rule.severity)
+    rule.note = request.POST.get("note", "")
+    rule.active = (request.POST.get("active") == "on")
+    rule.save()
+
+    return redirect("alarm_rules")
+
+
+@login_required
+@role_required("admin", "operator")
+@require_GET
+def active_alarms(request):
+    events = (
+        AlarmEvent.objects.filter(is_active=True)
+        .select_related("device", "rule")
+        .order_by("-created_at")
+    )
+    return render(
+        request,
+        "devices/monitoring/active_alarms.html",
+        {
+            "events": events,
+            "user_display": request.user.username,  # for header (same as dashboard)
+            "role": getattr(getattr(request.user, "userprofile", None), "role", "visitor"),
+        },
+    )
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def ack_alarm(request, event_id):
+    ev = get_object_or_404(AlarmEvent, id=event_id)
+    ev.acknowledged = True
+    ev.save(update_fields=["acknowledged"])
+    return redirect("active_alarms")
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def clear_alarm(request, event_id):
+    ev = get_object_or_404(AlarmEvent, id=event_id)
+    ev.clear()
+    return redirect("active_alarms")
