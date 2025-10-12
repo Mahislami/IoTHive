@@ -34,7 +34,7 @@ app.conf.beat_schedule = {
     },
 
     "evaluate-alarms-every-10s": {
-    "task": "your_app.evaluate_alarms_task",
+    "task": "devices.evaluate_alarms_task",
     "schedule": 10.0,  # seconds; can also use timedelta(seconds=10)
     },
 }

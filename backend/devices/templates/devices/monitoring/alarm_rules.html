@@ -8,24 +8,21 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
-      --bg-base: #121212;
-      --surface: #1E1E2F;
-      --border: #2A2A3C;
-      --text-primary: #FFFFFF;
-      --text-secondary: #B0B0C3;
-      --accent-primary: #6366F1;
-      --accent-success: #2DD4BF;
-      --accent-warning: #FBBF24;
-      --accent-error: #F43F5E;
-      --accent-info: #38BDF8;
-      --line: #3A3A50;
+      --bg-base:#121212; --surface:#1E1E2F; --border:#2A2A3C;
+      --text-primary:#FFFFFF; --text-secondary:#B0B0C3;
+      --accent-primary:#6366F1; --accent-success:#2DD4BF;
+      --accent-warning:#FBBF24; --accent-error:#F43F5E; --accent-info:#38BDF8; --line:#3A3A50;
     }
-    @keyframes fade-in { from {opacity:0; transform: translateY(10px)} to {opacity:1; transform: translateY(0)} }
-    .animate-fade-in { animation: fade-in .5s ease-out }
+    @keyframes fade-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .animate-fade-in{animation:fade-in .5s ease-out}
+    .tab-btn{border-color:var(--border);color:var(--text-secondary);}
+    .tab-btn.active{border-color:var(--accent-primary);color:var(--text-primary);background:rgba(99,102,241,.15);}
+    details summary::-webkit-details-marker{display:none;}
+    details summary{cursor:pointer;}
   </style>
 </head>
 <body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
-  <!-- same header as dashboard -->
+
   <header class="border-b border-[color:var(--line)]">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <h1 class="text-xl font-semibold">Welcome, {{ user_display }}</h1>
@@ -41,92 +38,321 @@
   </header>
 
   <main class="max-w-6xl mx-auto px-6 py-10">
-    <!-- top card -->
-    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
+    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-6 animate-fade-in">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-2xl font-bold mb-1">Alarm Rules</h2>
-          <p class="text-[color:var(--text-secondary)]">Set ranges (Sensor/Thermostat) or state triggers (Switch/Light).</p>
+          <p class="text-[color:var(--text-secondary)]">Configure thresholds by device type.</p>
         </div>
         <a href="{% url 'devices:active_alarms' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">View Active Alarms</a>
       </div>
+
+      <div class="mt-4 flex gap-2">
+        <button id="tab-numeric" class="tab-btn px-3 py-1 rounded-lg border">Numeric (Sensors, Thermostats)</button>
+        <button id="tab-binary" class="tab-btn px-3 py-1 rounded-lg border">Binary (Switches, Lights, Actuators)</button>
+      </div>
     </div>
 
-    <!-- device cards -->
-    <section class="grid gap-6 md:grid-cols-2">
-      {% for d in devices %}
-        {% with rules_map|get_item:d.id as r %}
-        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 animate-fade-in">
-          <div class="flex items-start justify-between gap-6">
-            <div class="min-w-0">
-              <h3 class="text-lg font-semibold truncate">{{ d.name }}</h3>
-              <p class="mt-1 text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
-              <p class="mt-2 text-xs text-[color:var(--text-secondary)]">
-                Current:
-                {% if d.device_type == 'sensor' or d.device_type == 'thermostat' %}
-                  {% if d.metadata and d.metadata.value is not None %}{{ d.metadata.value }}{% else %}—{% endif %}
-                {% else %}
-                  {{ d.status|yesno:"on,off" }}
-                {% endif %}
-              </p>
-            </div>
+    <!-- Numeric tab -->
+    <section id="panel-numeric" class="animate-fade-in space-y-6">
+      <!-- Sensors -->
+      <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6" open>
+        <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
+          Sensors
+          <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        </summary>
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for d in devices %}
+            {% if d.device_type == 'sensor' %}
+              {% with rules_map|get_item:d.id as r %}
+              <div class="border border-[color:var(--border)] rounded-2xl p-5">
+                <h4 class="text-md font-semibold">{{ d.name }}</h4>
+                <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
 
-            <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="w-full max-w-sm">
-              {% csrf_token %}
-              <input type="hidden" name="device_id" value="{{ d.id }}"/>
+                <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
+                  {% csrf_token %}
+                  <input type="hidden" name="device_id" value="{{ d.id }}"/>
 
-              {% if d.device_type == 'sensor' or d.device_type == 'thermostat' %}
-                <div class="flex gap-3">
-                  <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Min
-                    <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
-                           class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
-                  </label>
-                  <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Max
-                    <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
-                           class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
-                  </label>
-                </div>
-              {% else %}
-                <label class="text-sm text-[color:var(--text-secondary)] block">
-                  Trigger when state is:
-                  <select name="expected_state"
-                          class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]">
-                    <option value="" {% if not r or r.expected_state is None %}selected{% endif %}>—</option>
-                    <option value="on" {% if r and r.expected_state %}selected{% endif %}>On</option>
-                    <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>Off</option>
-                  </select>
-                </label>
-              {% endif %}
+                  <div class="flex gap-3">
+                    <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
+                      Min
+                      <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
+                             class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
+                    </label>
+                    <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
+                      Max
+                      <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
+                             class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
+                    </label>
+                  </div>
 
-              <div class="mt-3 flex items-center gap-3">
-                <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                  <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
-                  <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
-                  <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
-                </select>
-                <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-                  <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
-                </label>
+                  <div class="flex items-center gap-3">
+                    <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+                      <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
+                      <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
+                      <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    </select>
+                    <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+                      <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    </label>
+                  </div>
+
+                  <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                         class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
+
+                  <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
+                    Save
+                  </button>
+                </form>
               </div>
-
-              <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
-                     class="mt-3 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
-
-              <div class="mt-3">
-                <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No sensors found.</p>
+          {% endfor %}
         </div>
-        {% endwith %}
-      {% empty %}
-        <div class="col-span-full text-[color:var(--text-secondary)]">No devices.</div>
-      {% endfor %}
+      </details>
+
+      <!-- Thermostats -->
+      <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+        <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
+          Thermostats
+          <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        </summary>
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for d in devices %}
+            {% if d.device_type == 'thermostat' %}
+              {% with rules_map|get_item:d.id as r %}
+              <div class="border border-[color:var(--border)] rounded-2xl p-5">
+                <h4 class="text-md font-semibold">{{ d.name }}</h4>
+                <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+
+                <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
+                  {% csrf_token %}
+                  <input type="hidden" name="device_id" value="{{ d.id }}"/>
+
+                  <div class="flex gap-3">
+                    <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
+                      Min
+                      <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
+                             class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
+                    </label>
+                    <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
+                      Max
+                      <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
+                             class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
+                    </label>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+                      <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
+                      <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
+                      <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    </select>
+                    <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+                      <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    </label>
+                  </div>
+
+                  <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                         class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
+
+                  <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
+                    Save
+                  </button>
+                </form>
+              </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No thermostats found.</p>
+          {% endfor %}
+        </div>
+      </details>
+    </section>
+
+    <!-- Binary tab -->
+    <section id="panel-binary" class="hidden animate-fade-in space-y-6">
+      <!-- Switches -->
+      <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6" open>
+        <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
+          Switches
+          <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        </summary>
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for d in devices %}
+            {% if d.device_type == 'switch' %}
+              {% with rules_map|get_item:d.id as r %}
+              <div class="border border-[color:var(--border)] rounded-2xl p-5">
+                <h4 class="text-md font-semibold">{{ d.name }}</h4>
+                <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+                <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
+                  {% csrf_token %}
+                  <input type="hidden" name="device_id" value="{{ d.id }}"/>
+
+                  <label class="text-sm text-[color:var(--text-secondary)] block">
+                    Trigger when state is:
+                    <select name="expected_state"
+                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]">
+                      <option value="" {% if not r or r.expected_state is None %}selected{% endif %}>—</option>
+                      <option value="on" {% if r and r.expected_state %}selected{% endif %}>On</option>
+                      <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>Off</option>
+                    </select>
+                  </label>
+
+                  <div class="flex items-center gap-3">
+                    <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+                      <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
+                      <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
+                      <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    </select>
+                    <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+                      <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    </label>
+                  </div>
+
+                  <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                         class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
+
+                  <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
+                    Save
+                  </button>
+                </form>
+              </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No switches found.</p>
+          {% endfor %}
+        </div>
+      </details>
+
+      <!-- Lights -->
+      <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+        <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
+          Lights
+          <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        </summary>
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for d in devices %}
+            {% if d.device_type == 'light' %}
+              {% with rules_map|get_item:d.id as r %}
+              <div class="border border-[color:var(--border)] rounded-2xl p-5">
+                <h4 class="text-md font-semibold">{{ d.name }}</h4>
+                <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+                <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
+                  {% csrf_token %}
+                  <input type="hidden" name="device_id" value="{{ d.id }}"/>
+
+                  <label class="text-sm text-[color:var(--text-secondary)] block">
+                    Trigger when state is:
+                    <select name="expected_state"
+                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]">
+                      <option value="" {% if not r or r.expected_state is None %}selected{% endif %}>—</option>
+                      <option value="on" {% if r and r.expected_state %}selected{% endif %}>On</option>
+                      <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>Off</option>
+                    </select>
+                  </label>
+
+                  <div class="flex items-center gap-3">
+                    <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+                      <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
+                      <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
+                      <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    </select>
+                    <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+                      <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    </label>
+                  </div>
+
+                  <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                         class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
+
+                  <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
+                    Save
+                  </button>
+                </form>
+              </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No lights found.</p>
+          {% endfor %}
+        </div>
+      </details>
+
+      <!-- Actuators -->
+      <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+        <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
+          Actuators
+          <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        </summary>
+        <div class="grid gap-6 md:grid-cols-2">
+          {% for d in devices %}
+            {% if d.device_type == 'actuator' %}
+              {% with rules_map|get_item:d.id as r %}
+              <div class="border border-[color:var(--border)] rounded-2xl p-5">
+                <h4 class="text-md font-semibold">{{ d.name }}</h4>
+                <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+                <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
+                  {% csrf_token %}
+                  <input type="hidden" name="device_id" value="{{ d.id }}"/>
+
+                  <label class="text-sm text-[color:var(--text-secondary)] block">
+                    Trigger when state is:
+                    <select name="expected_state"
+                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]">
+                      <option value="" {% if not r or r.expected_state is None %}selected{% endif %}>—</option>
+                      <option value="on" {% if r and r.expected_state %}selected{% endif %}>On</option>
+                      <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>Off</option>
+                    </select>
+                  </label>
+
+                  <div class="flex items-center gap-3">
+                    <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
+                      <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
+                      <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
+                      <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    </select>
+                    <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+                      <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    </label>
+                  </div>
+
+                  <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                         class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
+
+                  <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
+                    Save
+                  </button>
+                </form>
+              </div>
+              {% endwith %}
+            {% endif %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No actuators found.</p>
+          {% endfor %}
+        </div>
+      </details>
     </section>
   </main>
+
+  <script>
+    (function(){
+      const tabN=document.getElementById('tab-numeric');
+      const tabB=document.getElementById('tab-binary');
+      const pN=document.getElementById('panel-numeric');
+      const pB=document.getElementById('panel-binary');
+      function activate(t){
+        if(t==='numeric'){tabN.classList.add('active');tabB.classList.remove('active');pN.classList.remove('hidden');pB.classList.add('hidden');}
+        else{tabB.classList.add('active');tabN.classList.remove('active');pB.classList.remove('hidden');pN.classList.add('hidden');}
+        localStorage.setItem('alarms_tab',t);
+      }
+      tabN.onclick=()=>activate('numeric');
+      tabB.onclick=()=>activate('binary');
+      activate(localStorage.getItem('alarms_tab')||'numeric');
+    })();
+  </script>
 </body>
 </html>

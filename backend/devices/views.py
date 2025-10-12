@@ -320,7 +320,7 @@ def save_alarm_rule(request):
     rule.active = (request.POST.get("active") == "on")
     rule.save()
 
-    return redirect("alarm_rules")
+    return redirect("devices:alarm_rules")
 
 
 @login_required
@@ -350,7 +350,7 @@ def ack_alarm(request, event_id):
     ev = get_object_or_404(AlarmEvent, id=event_id)
     ev.acknowledged = True
     ev.save(update_fields=["acknowledged"])
-    return redirect("active_alarms")
+    return redirect("devices:active_alarms")
 
 
 @login_required
@@ -359,4 +359,12 @@ def ack_alarm(request, event_id):
 def clear_alarm(request, event_id):
     ev = get_object_or_404(AlarmEvent, id=event_id)
     ev.clear()
-    return redirect("active_alarms")
+    return redirect("devices:active_alarms")
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def clear_alarm(request, event_id):
+    ev = get_object_or_404(AlarmEvent, id=event_id)
+    ev.clear()
+    return redirect("devices:active_alarms")
