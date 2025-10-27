@@ -1,13 +1,17 @@
 from celery import shared_task
-from datetime import timedelta
-from .models import Device
 import random
 import json
 import paho.mqtt.publish as publish
 from django.db.models import Exists, OuterRef
-from django.core.cache import cache
+
 from .models import Device, AlarmRule
 from .alarms import evaluate_device_alarms
+from .utils import load_device_metadata, save_device_metadata
+from .appliances import (
+    APPLIANCE_SPECS,
+    AMBIENT_TEMPERATURE,
+    get_appliance_spec,
+)
 
 # --- MQTT config (same as before) ---
 MQTT_BROKER = 'mosquitto-broker'
@@ -17,18 +21,129 @@ MQTT_PORT = 1883
 ROOM_WIDTH = 10
 ROOM_HEIGHT = 10
 
-# Helpers -------------------------------------------------------------
 
-def _safe_load_meta(device):
-    """device.metadata may be a JSON string or None."""
-    try:
-        return json.loads(device.metadata) if device.metadata else {}
-    except Exception:
-        return {}
 
-def _save_meta(device, meta, fields=("metadata",)):
-    device.metadata = json.dumps(meta)
-    device.save(update_fields=list(fields))
+def _rand_span(value):
+    if isinstance(value, (list, tuple)):
+        return random.uniform(value[0], value[1])
+    return float(value)
+
+
+def _persist_state(device, meta, extra_fields=None):
+    extra_fields = extra_fields or []
+    update_fields = set(extra_fields)
+    update_fields.add("metadata")
+    save_device_metadata(device, meta, update_fields=tuple(update_fields))
+
+
+def _power_topic(device):
+    return f"iot/power/{device.device_type}/{device.id}"
+
+
+def _publish_power(device, extra=None):
+    payload = {
+        "device": device.name,
+        "type": device.device_type,
+        "power_w": round(device.current_power_watts or 0, 2),
+        "power_capacity_w": device.power_rating_watts,
+    }
+    if device.target_temperature is not None:
+        payload["target_temperature"] = device.target_temperature
+    if device.current_temperature is not None:
+        payload["temperature"] = device.current_temperature
+    if device.mode:
+        payload["mode"] = device.mode
+    if extra:
+        payload.update(extra)
+    _pub(_power_topic(device), payload)
+
+
+def _initialize_appliance_state(device):
+    spec = get_appliance_spec(device.device_type)
+    if not spec:
+        return
+    meta = load_device_metadata(device)
+    if not device.power_rating_watts:
+        device.power_rating_watts = spec["power_rating"]
+    if not device.mode:
+        device.mode = spec["modes"][0]
+    if spec.get("cycles"):
+        meta.setdefault("cycle", spec["cycles"][0])
+        meta.setdefault("cycle_progress", 0)
+    if spec.get("temp_range"):
+        low, high = spec["temp_range"]
+        if device.target_temperature is None:
+            device.target_temperature = round(random.uniform(low, high), 1)
+        if device.current_temperature is None:
+            offset = random.uniform(2, 6)
+            if spec.get("heats", True):
+                device.current_temperature = max(low, device.target_temperature - offset)
+            else:
+                device.current_temperature = min(high, device.target_temperature + offset)
+    if device.device_type == "fridge":
+        device.status = True  # fridges stay on
+    device.current_power_watts = round(_rand_span(spec["idle"]), 2)
+    _persist_state(
+        device,
+        meta,
+        extra_fields=[
+            "power_rating_watts",
+            "mode",
+            "target_temperature",
+            "current_temperature",
+            "current_power_watts",
+            "status",
+        ],
+    )
+
+
+def _tick_appliance(device):
+    spec = get_appliance_spec(device.device_type)
+    if not spec:
+        return None, None
+    meta = load_device_metadata(device)
+    running = bool(device.status)
+    if device.device_type == "fridge":
+        running = True
+    draw = _rand_span(spec["active"] if running else spec["idle"])
+
+    if spec.get("temp_range"):
+        target = device.target_temperature
+        if target is None:
+            low, high = spec["temp_range"]
+            target = (low + high) / 2
+            device.target_temperature = target
+        current = device.current_temperature if device.current_temperature is not None else target
+        if spec.get("heats", True):
+            if running:
+                current = min(target, current + random.uniform(0.8, 2.5))
+            else:
+                current = max(AMBIENT_TEMPERATURE, current - random.uniform(0.4, 1.0))
+        else:
+            if running:
+                current = max(target, current - random.uniform(0.4, 1.2))
+            else:
+                current = min(AMBIENT_TEMPERATURE, current + random.uniform(0.3, 0.8))
+        device.current_temperature = round(current, 1)
+
+    if spec.get("cycles"):
+        progress = meta.get("cycle_progress", 0)
+        if running:
+            progress = min(100, progress + random.uniform(5, 18))
+        else:
+            progress = max(0, progress - random.uniform(4, 10))
+        if progress >= 100 and device.device_type != "fridge":
+            device.status = False
+            progress = 0
+        meta["cycle_progress"] = round(progress, 1)
+
+    device.current_power_watts = round(draw, 2)
+    _persist_state(
+        device,
+        meta,
+        extra_fields=["current_power_watts", "current_temperature", "target_temperature", "status"],
+    )
+    return meta, draw
 
 def _pub(topic, payload_dict):
     publish.single(topic, json.dumps(payload_dict), hostname=MQTT_BROKER, port=MQTT_PORT)
@@ -46,22 +161,40 @@ def simulate_device_activity():
         payload = {"device": device.name, "type": device.device_type}
 
         if device.device_type == 'sensor':
-            payload["reading"] = random.randint(20, 100)
+            meta = load_device_metadata(device)
+            meta["reading"] = random.randint(20, 100)
+            device.current_power_watts = round(random.uniform(0.5, 1.5), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
+            payload["reading"] = meta["reading"]
 
         elif device.device_type == 'light':
             new_status = random.choice([0, 1])
             device.status = new_status
-            device.save(update_fields=["status"])
+            device.current_power_watts = 9 if new_status else 0.4
+            device.save(update_fields=["status", "current_power_watts"])
             payload["status"] = new_status
 
         elif device.device_type == 'switch':
-            payload["state"] = random.choice([0, 1])
+            state = random.choice([0, 1])
+            device.current_power_watts = 2 if state else 0.1
+            device.status = state
+            device.save(update_fields=["status", "current_power_watts"])
+            payload["state"] = state
 
         elif device.device_type == 'thermostat':
-            payload["temperature"] = round(random.uniform(18.0, 25.0), 1)
+            meta = load_device_metadata(device)
+            temp = round(random.uniform(18.0, 25.0), 1)
+            meta["temperature"] = temp
+            device.current_power_watts = round(random.uniform(3, 8), 2)
+            save_device_metadata(
+                device,
+                meta,
+                update_fields=("metadata", "current_power_watts"),
+            )
+            payload["temperature"] = temp
 
         elif device.device_type == 'actuator':
-            meta = _safe_load_meta(device)
+            meta = load_device_metadata(device)
             if not meta:
                 meta = {"x": random.randint(0, ROOM_WIDTH), "y": random.randint(0, ROOM_HEIGHT)}
             x = meta.get("x", 0)
@@ -71,13 +204,37 @@ def simulate_device_activity():
             new_x = max(0, min(ROOM_WIDTH, x + dx))
             new_y = max(0, min(ROOM_HEIGHT, y + dy))
             meta.update({"x": new_x, "y": new_y})
-            _save_meta(device, meta)
+            device.current_power_watts = round(random.uniform(1.5, 4.0), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload.update({"x": new_x, "y": new_y, "position": int((new_x + new_y) / 2 * 10)})
+
+        elif device.device_type in APPLIANCE_SPECS:
+            if device.metadata is None:
+                _initialize_appliance_state(device)
+            meta, draw = _tick_appliance(device)
+            meta = meta or load_device_metadata(device)
+            payload.update({
+                "power_w": round(device.current_power_watts, 2),
+                "mode": device.mode,
+            })
+            if device.current_temperature is not None:
+                payload["temperature"] = device.current_temperature
+            if device.target_temperature is not None:
+                payload["target_temperature"] = device.target_temperature
+            if meta.get("cycle_progress") is not None:
+                payload["cycle_progress"] = meta["cycle_progress"]
+            if meta.get("cycle"):
+                payload["cycle"] = meta["cycle"]
 
         else:
             payload["message"] = "Unknown device update"
 
+        if "power_w" not in payload:
+            payload["power_w"] = round(device.current_power_watts or 0, 2)
+
         _pub(topic, payload)
+        if device.current_power_watts:
+            _publish_power(device)
         print(f"[MQTT] Published to {topic}: {payload}")
 
 # --------------------------------------------------------------------
@@ -103,73 +260,90 @@ def initialize_device_state():
         payload = {"device": device.name, "type": device.device_type}
 
         if device.device_type == 'sensor':
-            meta = _safe_load_meta(device)
+            meta = load_device_metadata(device)
             if "reading" not in meta:
-                meta["reading"] = random.randint(20, 100)  # initial numeric metric
-                _save_meta(device, meta)
+                meta["reading"] = random.randint(20, 100)
+            device.current_power_watts = round(random.uniform(0.4, 1.2), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload["reading"] = meta["reading"]
 
         elif device.device_type == 'light':
-            # Keep whatever is in DB; do not randomize
             payload["status"] = int(bool(device.status))
+            device.current_power_watts = 9 if device.status else 0.4
+            device.save(update_fields=["current_power_watts"])
 
         elif device.device_type == 'switch':
-            # Keep DB truth; if your model lacks a field, default to 0
-            # Assuming Device has .status; otherwise set to 0
             val = int(bool(getattr(device, "status", 0)))
             payload["state"] = val
+            device.current_power_watts = 2 if val else 0.1
+            device.save(update_fields=["current_power_watts"])
 
         elif device.device_type == 'thermostat':
-            meta = _safe_load_meta(device)
-            # Initialize a starting temperature if not present
+            meta = load_device_metadata(device)
             if "temperature" not in meta:
                 meta["temperature"] = round(random.uniform(19.0, 23.0), 1)
-                _save_meta(device, meta)
+            device.current_power_watts = round(random.uniform(3, 8), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload["temperature"] = meta["temperature"]
 
         elif device.device_type == 'actuator':
-            meta = _safe_load_meta(device)
+            meta = load_device_metadata(device)
             x = int(meta.get("x", 0))
             y = int(meta.get("y", 0))
             moving_right = bool(meta.get("moving_right", True))
             row_step = int(meta.get("row_step", 1))
 
-            # --- Lawnmower sweep update ---
             if moving_right:
-            # Move right until right wall, then drop a row and reverse
                 if x < ROOM_WIDTH:
                     x += 1
                 else:
-                # at right wall → go down a row, reverse direction
                     y = min(ROOM_HEIGHT, y + row_step)
                     moving_right = False
             else:
-            # Move left until left wall, then drop a row and reverse
                 if x > 0:
                     x -= 1
                 else:
-                    # at left wall → go down a row, reverse direction
                     y = min(ROOM_HEIGHT, y + row_step)
                     moving_right = True
 
-            # Optional: when we reach bottom, wrap to top and continue sweeping
             if y >= ROOM_HEIGHT:
-                y = y-1
+                y = ROOM_HEIGHT - 1
 
-            # Persist new state
             meta.update({"x": x, "y": y, "moving_right": moving_right, "row_step": row_step})
-            _save_meta(device, meta)
+            device.current_power_watts = round(random.uniform(1.5, 4.0), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
 
             payload.update({
-             "x": x,
-            "y": y,
-            "position": int((x + y) / 2 * 10),
+                "x": x,
+                "y": y,
+                "position": int((x + y) / 2 * 10),
             })
+
+        elif device.device_type in APPLIANCE_SPECS:
+            _initialize_appliance_state(device)
+            meta = load_device_metadata(device)
+            payload.update({
+                "power_w": round(device.current_power_watts, 2),
+                "mode": device.mode,
+            })
+            if device.current_temperature is not None:
+                payload["temperature"] = device.current_temperature
+            if device.target_temperature is not None:
+                payload["target_temperature"] = device.target_temperature
+            if meta.get("cycle"):
+                payload["cycle"] = meta["cycle"]
+            if meta.get("cycle_progress") is not None:
+                payload["cycle_progress"] = meta["cycle_progress"]
 
         else:
             payload["message"] = "Unknown device initial state"
 
+        if "power_w" not in payload:
+            payload["power_w"] = round(device.current_power_watts or 0, 2)
+
         _pub(topic, payload)
+        if device.current_power_watts:
+            _publish_power(device)
         print(f"[INIT] Published to {topic}: {payload}")
 
 @shared_task
@@ -190,22 +364,24 @@ def tick_dynamic_devices():
         payload = {"device": device.name, "type": device.device_type}
 
         if device.device_type == 'sensor':
-            meta = _safe_load_meta(device)
-            meta["reading"] = random.randint(20, 100)  # initial numeric metric
-            _save_meta(device, meta)
+            meta = load_device_metadata(device)
+            meta["reading"] = random.randint(20, 100)
+            device.current_power_watts = round(random.uniform(0.5, 1.5), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload["reading"] = meta["reading"]
 
         elif device.device_type == 'thermostat':
-            meta = _safe_load_meta(device)
+            meta = load_device_metadata(device)
             t = meta.get("temperature", round(random.uniform(19.0, 23.0), 1))
             drift = random.uniform(-0.3, 0.3)  # gentle drift
             new_t = max(16.0, min(28.0, round(t + drift, 1)))
             meta["temperature"] = new_t
-            _save_meta(device, meta)
+            device.current_power_watts = round(random.uniform(3, 8), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload["temperature"] = new_t
 
         elif device.device_type == 'actuator':
-            meta = _safe_load_meta(device)
+            meta = load_device_metadata(device)
             x = meta.get("x", random.randint(0, ROOM_WIDTH))
             y = meta.get("y", random.randint(0, ROOM_HEIGHT))
             dx = random.choice([-1, 0, 1])
@@ -213,7 +389,8 @@ def tick_dynamic_devices():
             new_x = max(0, min(ROOM_WIDTH, x + dx))
             new_y = max(0, min(ROOM_HEIGHT, y + dy))
             meta.update({"x": new_x, "y": new_y})
-            _save_meta(device, meta)
+            device.current_power_watts = round(random.uniform(1.5, 4.0), 2)
+            save_device_metadata(device, meta, update_fields=("metadata", "current_power_watts"))
             payload.update({
                 "x": new_x,
                 "y": new_y,
@@ -223,17 +400,41 @@ def tick_dynamic_devices():
         elif device.device_type == 'light':
             # Publish current DB status every tick (0/1), don't modify it
             payload["status"] = int(bool(device.status))
+            device.current_power_watts = 9 if device.status else 0.4
+            device.save(update_fields=["current_power_watts"])
 
         elif device.device_type == 'switch':
-            # Publish current DB state every tick (0/1), don't modify it
-            # If you store switch state in `status`, this mirrors initialize_device_state()
-            payload["state"] = int(bool(getattr(device, "status", 0)))
+            state = int(bool(getattr(device, "status", 0)))
+            payload["state"] = state
+            device.current_power_watts = 2 if state else 0.1
+            device.save(update_fields=["current_power_watts"])
+
+        elif device.device_type in APPLIANCE_SPECS:
+            meta, draw = _tick_appliance(device)
+            meta = meta or load_device_metadata(device)
+            payload.update({
+                "mode": device.mode,
+                "power_w": round(device.current_power_watts, 2),
+            })
+            if device.current_temperature is not None:
+                payload["temperature"] = device.current_temperature
+            if device.target_temperature is not None:
+                payload["target_temperature"] = device.target_temperature
+            if meta.get("cycle"):
+                payload["cycle"] = meta["cycle"]
+            if meta.get("cycle_progress") is not None:
+                payload["cycle_progress"] = meta["cycle_progress"]
 
         else:
             # Skip sensors/unknowns here (or include if you want)
             continue
 
+        if "power_w" not in payload:
+            payload["power_w"] = round(device.current_power_watts or 0, 2)
+
         _pub(topic, payload)
+        if device.current_power_watts:
+            _publish_power(device)
         print(f"[TICK] Published to {topic}: {payload}")
 
 @shared_task(name="devices.evaluate_alarms_task", acks_late=True, time_limit=20, soft_time_limit=15)

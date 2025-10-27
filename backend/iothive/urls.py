@@ -18,13 +18,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from devices.views import signup_view, dashboard_view
+from devices.forms import StyledAuthenticationForm
+from iothive.views import home_view
 
 
 
 urlpatterns = [
+    path('', home_view, name='home'),
     path('admin/', admin.site.urls),
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html', authentication_form=StyledAuthenticationForm), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('signup/', signup_view, name='signup'),
     path("devices/", include(("devices.urls", "devices"), namespace="devices")),
     path("users/", include(("users.urls", "users"), namespace="users")),

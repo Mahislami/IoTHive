@@ -13,6 +13,8 @@ This project is ideal for experimenting with edge-device communication, predicti
 * ♻ **Celery** for periodic device simulation and task scheduling
 * 🐳 Fully **Dockerized** architecture
 * 🔍 Supports **sensor data publishing**, **device control simulation**, and **topic-based MQTT communication**
+* 🍳 Dedicated **Kitchen Appliance Studio** with schematic-guided forms, alarms, and MQTT controls
+* ⚡ **Per-device power modeling** with dedicated Grafana dashboards
 
 ---
 
@@ -140,11 +142,14 @@ iothive/
 
 ## 📌 Device Types Supported
 
-* `sensor` – Sends periodic numeric data
-* `light` – Simulates ON/OFF status
-* `thermostat` – Sends temperature settings
+* `sensor` – Sends periodic numeric data (0–1.5 W consumption)
+* `light` – Simulates ON/OFF status with realistic draw
+* `thermostat` – Sends ambient temperature readings
 * `switch` – Sends toggle state
-* `actuator` – Can be extended for control commands
+* `actuator` – Emits positional data for moving assets
+* `dishwasher`, `washing_machine`, `dryer`, `oven`, `microwave`, `kettle`, `gas`, `fridge` – Smart appliances with realistic temperature/power curves that admins/operators can control via the dashboard
+
+Each powered device now publishes an additional MQTT topic under `iot/power/<device_type>/<id>`. Telegraf subscribes to the `iot/#` namespace so Grafana can present a dedicated **Power Usage** board (link exposed on the dashboard). Use the new *Control* action on appliance rows to push on/off, mode, temperature, and cycle changes back through MQTT in real time.
 
 ---
 

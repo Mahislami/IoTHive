@@ -11,6 +11,14 @@ class Device(models.Model):
         ('light', 'Light'),
         ('thermostat', 'Thermostat'),
         ('switch', 'Switch'),
+        ('dishwasher', 'Dishwasher'),
+        ('washing_machine', 'Washing Machine'),
+        ('dryer', 'Dryer'),
+        ('oven', 'Oven'),
+        ('microwave', 'Microwave'),
+        ('kettle', 'Kettle'),
+        ('gas', 'Gas Range'),
+        ('fridge', 'Fridge'),
     )
 
     name = models.CharField(max_length=255)
@@ -18,7 +26,12 @@ class Device(models.Model):
     status = models.BooleanField(default=False)  # Example: On/Off
     topic = models.CharField(max_length=255, unique=True)  # MQTT topic
     created_at = models.DateTimeField(auto_now_add=True)
-    metadata = models.JSONField(blank=True, null=True)  # ✅ Add this field
+    metadata = models.JSONField(blank=True, null=True)  # per-device extra config/state
+    power_rating_watts = models.PositiveIntegerField(default=0)
+    current_power_watts = models.FloatField(default=0)
+    target_temperature = models.FloatField(null=True, blank=True)
+    current_temperature = models.FloatField(null=True, blank=True)
+    mode = models.CharField(max_length=32, blank=True, default='')
 
     def __str__(self):
         return f"{self.name} ({self.device_type})"

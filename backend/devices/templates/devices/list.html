@@ -22,6 +22,23 @@
     </div>
   </div>
 
+  {% if request.user.userprofile.role in "admin operator" %}
+  <div class="mb-6 grid gap-4 md:grid-cols-2">
+    <a href="{% url 'devices:kitchen_list' %}"
+       class="group flex flex-col justify-between rounded-2xl border border-[color:var(--border)] bg-gradient-to-br from-purple-900/50 to-indigo-900/30 p-5">
+      <div>
+        <p class="text-sm uppercase tracking-wide text-[color:var(--text-secondary)]">Kitchen Appliances</p>
+        <h2 class="mt-2 text-xl font-semibold">Manage smart ovens, kettles & more</h2>
+        <p class="mt-2 text-sm text-[color:var(--text-secondary)]">Specialized forms, schematics, and MQTT control tailored for each appliance.</p>
+      </div>
+      <span class="mt-4 inline-flex items-center gap-2 text-sm text-[color:var(--accent-primary)] group-hover:translate-x-1 transition">
+        Open studio
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+      </span>
+    </a>
+  </div>
+  {% endif %}
+
   <div class="overflow-hidden rounded-2xl border border-[color:var(--border)]">
     <table class="min-w-full bg-[color:var(--surface)] text-sm">
       <thead class="text-left text-[color:var(--text-secondary)] border-b border-[color:var(--border)]">
@@ -29,6 +46,7 @@
           <th class="px-4 py-3">Name</th>
           <th class="px-4 py-3">Type</th>
           <th class="px-4 py-3">Topic</th>
+          <th class="px-4 py-3">Power</th>
           <th class="px-4 py-3">Status</th>
           <th class="px-4 py-3">Created</th>
           <th class="px-4 py-3 text-right">Actions</th>
@@ -42,6 +60,12 @@
             </td>
             <td class="px-4 py-3">{{ d.get_device_type_display }}</td>
             <td class="px-4 py-3 font-mono text-xs">{{ d.topic }}</td>
+            <td class="px-4 py-3">
+              <div class="font-mono text-xs">
+                {{ d.current_power_watts|default_if_none:0|floatformat:1 }} W
+              </div>
+              <div class="text-[color:var(--text-secondary)] text-xs">capacity {{ d.power_rating_watts }} W</div>
+            </td>
             <td class="px-4 py-3">
               {% if d.status %}
                 <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-success)] mr-2"></span>On
@@ -68,6 +92,12 @@
                          class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Open</a>
                     </li>
                     {% if request.user.userprofile.role in "admin operator" %}
+                    {% if d.device_type in appliance_types %}
+                    <li class="border-t border-[color:var(--border)]">
+                      <a href="{% url 'devices:control' d.pk %}"
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Control</a>
+                    </li>
+                    {% endif %}
                     <li class="border-t border-[color:var(--border)]">
                       <a href="{% url 'devices:edit' d.pk %}"
                          class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>

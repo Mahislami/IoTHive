@@ -3,6 +3,10 @@
 {% block content %}
 <div class="max-w-xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
+    <div class="flex items-center justify-between text-sm mb-4">
+      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Home</a>
+      <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
+    </div>
     <h1 class="text-2xl font-bold mb-6">
       {% if object %}Edit {{ object.name }}{% else %}Create Device{% endif %}
     </h1>
@@ -31,6 +35,19 @@
         <p class="text-xs text-[color:var(--text-secondary)] mt-1">MQTT topic that this device publishes to.</p>
       </div>
       <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Power Rating (W)</label>
+        {{ form.power_rating_watts }}
+        <p class="text-xs text-[color:var(--text-secondary)] mt-1">Typical draw when the device is actively running.</p>
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Target Temperature (°C)</label>
+        {{ form.target_temperature }}
+      </div>
+      <div>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Mode</label>
+        {{ form.mode }}
+      </div>
+      <div>
         <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Metadata (JSON)</label>
         {{ form.metadata }}
         {% if form.metadata.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.metadata.errors.0 }}</p>{% endif %}
@@ -41,8 +58,10 @@
                 class="px-4 py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700">
           Save
         </button>
-        <a href="{% url 'devices:list' %}"
-           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Cancel</a>
+        <a href="javascript:history.back()"
+           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Back</a>
+        <a href="{% url 'home' %}"
+           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Home</a>
       </div>
     </form>
   </div>

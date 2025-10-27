@@ -1,14 +1,18 @@
 # your_app/services/alarms.py
 from .models import AlarmRule, AlarmEvent, Device
+from .utils import load_device_metadata
 
 NUMERIC_TYPES = {'sensor', 'thermostat'}
 BOOLEAN_TYPES = {'switch', 'light', 'actuator'}
 
 def _get_numeric_value(device: Device):
     try:
-        meta = device.metadata or {}
-        if 'value' in meta and meta['value'] is not None:
-            return float(meta['value'])
+        meta = load_device_metadata(device)
+        for key in ("value", "reading", "temperature"):
+            if key in meta and meta[key] is not None:
+                return float(meta[key])
+        if device.current_temperature is not None:
+            return float(device.current_temperature)
     except (TypeError, ValueError):
         pass
     return None

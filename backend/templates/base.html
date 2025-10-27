@@ -26,14 +26,33 @@
 </head>
 <body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
   <header class="border-b border-[color:var(--line)]">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="{% url 'dashboard' %}" class="font-semibold">Home</a>
-      {% if request.user.is_authenticated %}
-        <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3 text-sm">
+        {% with referer=request.META.HTTP_REFERER %}
+          {% if referer %}
+            <a href="{{ referer }}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
+          {% else %}
+            <a href="{% if request.user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
+          {% endif %}
+        {% endwith %}
+        <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] font-semibold">Home</a>
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'dashboard' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Dashboard</a>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
+        {% if request.user.is_authenticated %}
           <span>{{ request.user.username }}</span>
-          <a href="{% url 'logout' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Logout</a>
-        </div>
-      {% endif %}
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] text-[color:var(--text-primary)]">
+              Logout
+            </button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Login</a>
+        {% endif %}
+      </div>
     </div>
   </header>
 

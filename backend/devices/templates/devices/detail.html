@@ -28,6 +28,32 @@
         <div class="text-[color:var(--text-secondary)]">Created</div>
         <div class="mt-1">{{ device.created_at|date:"Y-m-d H:i" }}</div>
       </div>
+      <div class="p-4 rounded-xl border border-[color:var(--border)]">
+        <div class="text-[color:var(--text-secondary)]">Power Draw</div>
+        <div class="mt-1 text-lg font-mono">{{ current_power|floatformat:1 }} W</div>
+        <div class="text-xs text-[color:var(--text-secondary)]">Capacity {{ power_capacity }} W</div>
+      </div>
+      {% if device.current_temperature %}
+      <div class="p-4 rounded-xl border border-[color:var(--border)]">
+        <div class="text-[color:var(--text-secondary)]">Temperature</div>
+        <div class="mt-1">{{ device.current_temperature }}°C
+          {% if device.target_temperature %}
+            <span class="text-xs text-[color:var(--text-secondary)]">(target {{ device.target_temperature }}°C)</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if cycle_progress %}
+      <div class="p-4 rounded-xl border border-[color:var(--border)] col-span-full">
+        <div class="text-[color:var(--text-secondary)] mb-2">Cycle Progress</div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-2 bg-[color:var(--bg-base)] rounded-full overflow-hidden">
+            <div class="h-full bg-[color:var(--accent-primary)]" style="width: {{ cycle_progress }}%"></div>
+          </div>
+          <span class="text-sm">{{ cycle_progress }}%</span>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <div class="mt-6">
@@ -37,6 +63,10 @@
 
     {% if request.user.userprofile.role in "admin operator" %}
     <div class="mt-6 flex items-center gap-3">
+      {% if can_control %}
+      <a href="{% url 'devices:control' device.pk %}"
+         class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400">Control</a>
+      {% endif %}
       <a href="{% url 'devices:edit' device.pk %}"
          class="px-4 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg hover:bg-indigo-700">Edit</a>
       <form method="post" action="{% url 'devices:delete' device.pk %}" onsubmit="return confirm('Delete {{ device.name }}?');">

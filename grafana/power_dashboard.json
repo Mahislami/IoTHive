@@ -1,0 +1,350 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 8,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds",
+            "thresholds": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "orange",
+                "value": 500
+              },
+              {
+                "color": "red",
+                "value": 900
+              }
+            ]
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+          },
+          "query": "appliances = from(bucket: \"iot_bucket\")\n  |> range(start: date.truncate(t: now(), unit: 1mo))\n  |> filter(fn: (r) => r._measurement == \"mqtt_consumer\" and r.topic =~ /^iot\\/power\\/(dishwasher|washing_machine|dryer|oven|microwave|kettle|gas|fridge)\\//)\n  |> filter(fn: (r) => r._field == \"power_w\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\n\nappliances\n  |> group(columns: [\"topic\"])\n  |> last()\n  |> group()\n  |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Month Total",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+          },
+          "query": "appliances = from(bucket: \"iot_bucket\")\n  |> range(start: date.truncate(t: now(), unit: 1mo))\n  |> filter(fn: (r) => r._measurement == \"mqtt_consumer\" and r.topic =~ /^iot\\/power\\/(dishwasher|washing_machine|dryer|oven|microwave|kettle|gas|fridge)\\//)\n  |> filter(fn: (r) => r._field == \"power_w\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\n\ntotals = appliances\n  |> group(columns: [\"topic\"])\n  |> last()\n  |> group()\n  |> sum()\n\nrate = if exists from(bucket: \"iot_bucket\")\n    |> range(start: -5m)\n    |> filter(fn: (r) => r._field == \"cost_per_kwh\")\n    |> last()\n  then from(bucket: \"iot_bucket\")\n    |> range(start: -5m)\n    |> filter(fn: (r) => r._field == \"cost_per_kwh\")\n    |> last()\n    |> findColumn(fn: (key) => true, column: \"_value\")\n    |> vl.convert(type: float)[0]\n  else 0.11\n\ntotals |> map(fn: (r) => ({ r with _value: r._value * rate }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Month Bill",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+          },
+          "query": "appliances = from(bucket: \"iot_bucket\")\n  |> range(start: date.truncate(t: now(), unit: 1d))\n  |> filter(fn: (r) => r._measurement == \"mqtt_consumer\" and r.topic =~ /^iot\\/power\\/(dishwasher|washing_machine|dryer|oven|microwave|kettle|gas|fridge)\\//)\n  |> filter(fn: (r) => r._field == \"power_w\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\n\nappliances\n  |> group(columns: [\"topic\"])\n  |> last()\n  |> group()\n  |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Day Total",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 9
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+          },
+          "query": "appliances = from(bucket: \"iot_bucket\")\n  |> range(start: date.truncate(t: now(), unit: 1d))\n  |> filter(fn: (r) => r._measurement == \"mqtt_consumer\" and r.topic =~ /^iot\\/power\\/(dishwasher|washing_machine|dryer|oven|microwave|kettle|gas|fridge)\\//)\n  |> filter(fn: (r) => r._field == \"power_w\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> integral(unit: 1h)\n  |> map(fn: (r) => ({ r with _value: r._value / 1000.0 }))\n\ntotals = appliances\n  |> group(columns: [\"topic\"])\n  |> last()\n  |> group()\n  |> sum()\n\nrate = if exists from(bucket: \"iot_bucket\")\n    |> range(start: -5m)\n    |> filter(fn: (r) => r._field == \"cost_per_kwh\")\n    |> last()\n  then from(bucket: \"iot_bucket\")\n    |> range(start: -5m)\n    |> filter(fn: (r) => r._field == \"cost_per_kwh\")\n    |> last()\n    |> findColumn(fn: (key) => true, column: \"_value\")\n    |> vl.convert(type: float)[0]\n  else 0.11\n\ntotals |> map(fn: (r) => ({ r with _value: r._value * rate }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Day Cost",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Top 5 Currently Running",
+      "type": "row"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e87c7d47-de3d-43a7-8ecc-c91b3789d586"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket:\"iot_bucket\", tag:\"topic\")",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "topic",
+        "options": [],
+        "query": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Energy Command Center",
+  "uid": "e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5",
+  "version": 7,
+  "weekStart": ""
+}

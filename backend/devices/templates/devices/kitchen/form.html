@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load extras %}
+{% block title %}{% if is_edit %}Edit{% else %}Create{% endif %} Appliance{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-10">
+  <div class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="text-sm uppercase tracking-wide text-[color:var(--text-secondary)]">Kitchen Lab</p>
+        <h1 class="text-3xl font-bold">{% if is_edit %}Edit{% else %}New{% endif %} Appliance</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'home' %}" class="px-4 py-2 rounded-xl border border-[color:var(--border)]">Home</a>
+        <a href="{% url 'devices:kitchen_list' %}" class="px-4 py-2 rounded-xl border border-[color:var(--border)]">Back</a>
+      </div>
+    </div>
+
+    <form method="post" class="mt-6 grid gap-8">
+      {% csrf_token %}
+      <div class="grid gap-6 md:grid-cols-2">
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">Name</label>
+            {{ form.name|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+          </div>
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">Device Type</label>
+            {{ form.device_type|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+            {% if is_edit %}<p class="text-xs text-[color:var(--text-secondary)]">Type locked after creation.</p>{% endif %}
+          </div>
+          {% if not is_edit %}
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-[color:var(--text-secondary)]">Status</label>
+            {{ form.status|add_class:"h-4 w-4 text-[color:var(--accent-primary)]" }}
+          </div>
+          {% else %}
+            <div class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
+              <span>Status</span>
+              <span class="px-2 py-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text-primary)]">{{ form.instance.status|yesno:"On,Off"|default:"Off" }}</span>
+            </div>
+          {% endif %}
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">MQTT Topic</label>
+            {{ form.topic|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+          </div>
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">Power Rating (W)</label>
+            {{ form.power_rating_watts|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+          </div>
+          {% if not is_edit %}
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">Target Temperature (°C)</label>
+            {{ form.target_temperature|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+          </div>
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)]">Mode</label>
+            {{ form.mode|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+          </div>
+          {% else %}
+            <div class="text-sm text-[color:var(--text-secondary)] space-y-1">
+              <p>Target Temperature: <span class="font-semibold text-[color:var(--text-primary)]">{{ form.instance.target_temperature|default:"—" }}</span></p>
+              <p>Mode: <span class="font-semibold text-[color:var(--text-primary)]">{{ form.instance.mode|default:"—" }}</span></p>
+              <p class="pt-2 text-xs">Runtime controls are managed from the appliance Control screen.</p>
+            </div>
+          {% endif %}
+        </div>
+        <div class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg-base)] p-6">
+          <div class="text-sm text-[color:var(--text-secondary)] mb-2">Schematic</div>
+          <div class="flex items-center justify-center">
+            <div class="w-56" aria-hidden="true">{{ illustration|safe }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-[color:var(--border)] p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-[color:var(--text-secondary)]">Appliance Profile</p>
+            <h2 class="text-xl font-semibold">Inputs for {{ selected_type|default:"selected appliance"|title }}</h2>
+          </div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          {% for cfg in appliance_field_configs %}
+            {% with field=form|get_item:cfg.name %}
+            <div>
+              <label class="text-sm text-[color:var(--text-secondary)]">{{ field.label }}</label>
+              {{ field|add_class:"w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)] text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-primary)]" }}
+              {% if field.help_text %}
+                <p class="text-xs text-[color:var(--text-secondary)]">{{ field.help_text }}</p>
+              {% endif %}
+            </div>
+            {% endwith %}
+          {% empty %}
+            <p class="text-[color:var(--text-secondary)]">No special inputs required.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" class="px-5 py-3 rounded-xl bg-[color:var(--accent-primary)] text-white hover:bg-indigo-600">Save</button>
+        <a href="{% url 'devices:kitchen_list' %}" class="px-5 py-3 rounded-xl border border-[color:var(--border)]">Back</a>
+        <a href="{% url 'home' %}" class="px-5 py-3 rounded-xl border border-[color:var(--border)]">Home</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const select = document.getElementById('id_device_type');
+    if(select && !{{ is_edit|yesno:'true,false' }}){
+      select.addEventListener('change', (event) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('device_type', event.target.value);
+        window.location.href = url.toString();
+      });
+    }
+  })();
+</script>
+{% endblock %}

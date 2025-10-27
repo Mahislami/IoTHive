@@ -1,10 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .utils import publish_device_update_like_simulator
+from .utils import (
+    publish_device_update_like_simulator,
+    load_device_metadata,
+    save_device_metadata,
+)
 from rest_framework import generics
 from .models import Device
 from .serializers import DeviceSerializer
-from .forms import DeviceForm  # New
+from .forms import DeviceForm, KitchenApplianceForm  # New
 from django.contrib.auth import login
 from .forms import SignUpForm
 from .forms import StyledAuthenticationForm
@@ -14,6 +18,7 @@ from django.contrib.auth.models import User
 from django.views.generic import ListView, DetailView
 import json
 from .models import Device, UserProfile
+from .appliances import APPLIANCE_SPECS, get_appliance_illustration, APPLIANCE_DEVICE_TYPES
 from users.permissions import role_required
 from django.urls import reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
@@ -25,7 +30,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 
 from .models import Device
-from .forms import DeviceForm
+from .forms import DeviceForm, KitchenApplianceForm
 from .permissions import role_required  # or from users.permissions import role_required
 
 
@@ -58,6 +63,11 @@ class DeviceListView(ListView):
             )
         return qs
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["appliance_types"] = APPLIANCE_SPECS.keys()
+        return ctx
+
 
 @method_decorator(login_required, name="dispatch")
 class DeviceDetailView(DetailView):
@@ -67,8 +77,18 @@ class DeviceDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        meta = self.object.metadata or {}
+        meta = load_device_metadata(self.object)
         ctx["metadata_pretty"] = json.dumps(meta, indent=2, ensure_ascii=False)
+        ctx["current_power"] = round(self.object.current_power_watts or 0, 2)
+        ctx["power_capacity"] = self.object.power_rating_watts
+        ctx["appliance_spec"] = APPLIANCE_SPECS.get(self.object.device_type)
+        ctx["cycle_progress"] = meta.get("cycle_progress")
+        ctx["can_control"] = (
+            self.request.user.is_authenticated
+            and hasattr(self.request.user, "userprofile")
+            and self.request.user.userprofile.role in ("admin", "operator")
+            and self.object.device_type in APPLIANCE_SPECS
+        )
         return ctx
 
 
@@ -87,6 +107,13 @@ class DeviceUpdateView(UpdateView):
     template_name = "devices/edit.html"
     success_url = reverse_lazy("devices:list")
 
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.device_type in APPLIANCE_DEVICE_TYPES:
+            return redirect("devices:kitchen_edit", pk=obj.pk)
+        self.object = obj
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         # Determine if status changed so we don’t spam MQTT on unrelated edits
         status_changed = "status" in form.changed_data
@@ -101,6 +128,87 @@ class DeviceUpdateView(UpdateView):
                 messages.error(self.request, f"Device saved, but MQTT publish failed: {e}")
         return response
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["device_type"].disabled = True
+        return form
+
+
+@method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
+class KitchenApplianceListView(ListView):
+    model = Device
+    template_name = "devices/kitchen/list.html"
+    context_object_name = "devices"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (Device.objects
+                .filter(device_type__in=APPLIANCE_SPECS.keys())
+                .order_by("-created_at"))
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["available_types"] = APPLIANCE_DEVICE_TYPES
+        ctx["illustrations"] = {dt: get_appliance_illustration(dt) for dt in APPLIANCE_DEVICE_TYPES}
+        return ctx
+
+
+class KitchenApplianceFormViewMixin:
+    form_class = KitchenApplianceForm
+    template_name = "devices/kitchen/form.html"
+    success_url = reverse_lazy("devices:kitchen_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        initial = kwargs.get("initial", {}).copy()
+        selected_type = initial.get("device_type") or None
+        current_object = getattr(self, "object", None)
+        if current_object and not selected_type:
+            selected_type = current_object.device_type
+        if not selected_type:
+            selected_type = self.request.GET.get("device_type") or APPLIANCE_DEVICE_TYPES[0]
+        initial["device_type"] = selected_type
+        kwargs["initial"] = initial
+        kwargs["request"] = self.request
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["available_types"] = APPLIANCE_DEVICE_TYPES
+        form = ctx.get("form")
+        if form:
+            ctx["illustration"] = form.illustration_svg
+            ctx["appliance_field_configs"] = form.appliance_field_configs
+            ctx["selected_type"] = getattr(form, "selected_type", None)
+        return ctx
+
+
+@method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
+class KitchenApplianceCreateView(KitchenApplianceFormViewMixin, CreateView):
+    model = Device
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["is_edit"] = False
+        return ctx
+
+
+@method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
+class KitchenApplianceUpdateView(KitchenApplianceFormViewMixin, UpdateView):
+    model = Device
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field_name in ("device_type", "status", "target_temperature", "mode"):
+            if field_name in form.fields:
+                form.fields[field_name].disabled = True
+        return form
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["is_edit"] = True
+        return ctx
+
 
 @login_required
 @role_required("admin", "operator")
@@ -113,6 +221,78 @@ def device_delete(request, pk):
     # Fallback confirm if someone GETs the URL
     return render(request, "devices/confirm_delete.html", {"device": device})
 
+
+@login_required
+@role_required("admin", "operator")
+def device_control(request, pk):
+    device = get_object_or_404(Device, pk=pk)
+    if device.device_type not in APPLIANCE_SPECS:
+        messages.error(request, "Controls are only available for managed appliances.")
+        return redirect("devices:detail", pk=pk)
+
+    meta = load_device_metadata(device)
+    spec = APPLIANCE_SPECS.get(device.device_type)
+
+    if request.method == "POST":
+        update_fields = []
+        meta_changed = False
+
+        desired_status = request.POST.get("status")
+        if desired_status in ("on", "off"):
+            desired_bool = desired_status == "on"
+            if desired_bool != device.status:
+                device.status = desired_bool
+                update_fields.append("status")
+
+        target_temp = request.POST.get("target_temperature")
+        if target_temp:
+            try:
+                temp_val = float(target_temp)
+                if device.target_temperature != temp_val:
+                    device.target_temperature = temp_val
+                    update_fields.append("target_temperature")
+            except ValueError:
+                messages.error(request, "Temperature must be a number.")
+                return redirect("devices:control", pk=pk)
+
+        mode = request.POST.get("mode")
+        if mode and mode != device.mode:
+            device.mode = mode
+            update_fields.append("mode")
+
+        cycle = request.POST.get("cycle")
+        if cycle and spec.get("cycles"):
+            meta["cycle"] = cycle
+            meta_changed = True
+        if request.POST.get("reset_cycle") == "on":
+            meta["cycle_progress"] = 0
+            meta_changed = True
+
+        if meta_changed and update_fields:
+            save_device_metadata(
+                device,
+                meta,
+                update_fields=tuple(set(update_fields + ["metadata"])),
+            )
+            update_fields = []
+        elif meta_changed:
+            save_device_metadata(device, meta)
+
+        if update_fields:
+            device.save(update_fields=update_fields)
+
+        publish_device_update_like_simulator(device)
+        messages.success(request, "Device control update published to MQTT.")
+        return redirect("devices:detail", pk=pk)
+
+    context = {
+        "device": device,
+        "spec": spec,
+        "meta": meta,
+        "status_on": device.status,
+    }
+    return render(request, "devices/control.html", context)
+
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -123,7 +303,6 @@ def signup_view(request):
 
             # set role on profile (create or update)
             role = form.cleaned_data['role']
-            print(role)
             UserProfile.objects.update_or_create(
                 user=user,
                 defaults={'role': role}
@@ -150,7 +329,14 @@ def dashboard_view(request):
             "href": "http://localhost:3000/login",  # TODO: replace
             "desc": "View metrics and charts",
             "icon": "activity",
-        }
+        },
+        {
+            "key": "power_grafana",
+            "label": "Power Usage",
+            "href": "http://localhost:3000/d/e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5/energy-command-center?orgId=1",
+            "desc": "Track appliance energy consumption",
+            "icon": "zap",
+        },
     ]
 
     if role in ("admin", "operator"):
@@ -166,6 +352,13 @@ def dashboard_view(request):
             "label": "New Device",
             "href": reverse("devices:create"),
             "desc": "Create a new device",
+        })
+        menu.insert(2, {
+            "key": "kitchen",
+            "label": "Kitchen Appliances",
+            "href": reverse("devices:kitchen_list"),
+            "desc": "Dedicated controls for ovens, kettles, etc.",
+            "icon": "chef-hat",
         })
         menu.append({
         "key": "alarm_rules",
@@ -244,8 +437,18 @@ class DeviceDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        meta = self.object.metadata or {}
+        meta = load_device_metadata(self.object)
         ctx["metadata_pretty"] = json.dumps(meta, indent=2, ensure_ascii=False)
+        ctx["current_power"] = round(self.object.current_power_watts or 0, 2)
+        ctx["power_capacity"] = self.object.power_rating_watts
+        ctx["appliance_spec"] = APPLIANCE_SPECS.get(self.object.device_type)
+        ctx["cycle_progress"] = meta.get("cycle_progress")
+        ctx["can_control"] = (
+            self.request.user.is_authenticated
+            and hasattr(self.request.user, "userprofile")
+            and self.request.user.userprofile.role in ("admin", "operator")
+            and self.object.device_type in APPLIANCE_SPECS
+        )
         return ctx
 
 
@@ -288,6 +491,7 @@ def alarm_rules(request):
         "devices/monitoring/alarm_rules.html",
         {
             "devices": devices,
+            "kitchen_devices": [d for d in devices if d.device_type in APPLIANCE_SPECS],
             "rules_map": rules_map,
             "user_display": request.user.username,  # for header (same as dashboard)
             "role": getattr(getattr(request.user, "userprofile", None), "role", "visitor"),

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Kitchen Appliances{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-10">
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div>
+      <p class="text-sm uppercase tracking-wide text-[color:var(--text-secondary)]">Kitchen Lab</p>
+      <h1 class="text-3xl font-bold">Kitchen Appliances</h1>
+      <p class="text-[color:var(--text-secondary)]">Curated controls for ovens, kettles, dishwashers and more.</p>
+    </div>
+    <div class="flex gap-3">
+      <a href="{% url 'devices:kitchen_create' %}"
+         class="px-4 py-2 rounded-xl bg-[color:var(--accent-primary)] text-white hover:bg-indigo-600">Add appliance</a>
+      <a href="{% url 'devices:list' %}" class="px-4 py-2 rounded-xl border border-[color:var(--border)]">Back to all devices</a>
+    </div>
+  </div>
+
+  {% if devices %}
+  <div class="grid gap-5 md:grid-cols-2">
+    {% for d in devices %}
+    <div class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[color:var(--text-secondary)]">{{ d.get_device_type_display }}</p>
+          <h2 class="text-xl font-semibold">{{ d.name }}</h2>
+        </div>
+        <span class="text-xs px-2 py-1 rounded-full border border-[color:var(--border)]">{{ d.current_power_watts|floatformat:1 }} W</span>
+      </div>
+      <div class="mt-4 text-sm text-[color:var(--text-secondary)] font-mono overflow-hidden text-ellipsis">{{ d.topic }}</div>
+      <div class="mt-4 flex items-center gap-2 text-sm">
+        {% if d.status %}
+          <span class="w-2 h-2 rounded-full bg-[color:var(--accent-success)]"></span> Running
+        {% else %}
+          <span class="w-2 h-2 rounded-full bg-[color:var(--accent-error)]"></span> Idle
+        {% endif %}
+      </div>
+      <div class="mt-4 flex items-center gap-3 text-sm">
+        <a href="{% url 'devices:kitchen_edit' d.pk %}"
+           class="px-3 py-2 rounded-lg bg-[color:var(--accent-primary)]/80 text-white hover:bg-[color:var(--accent-primary)]">Edit</a>
+        <a href="{% url 'devices:detail' d.pk %}"
+           class="px-3 py-2 rounded-lg border border-[color:var(--border)]">Open detail</a>
+        <a href="{% url 'devices:control' d.pk %}"
+           class="px-3 py-2 rounded-lg border border-[color:var(--border)]">Control</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="rounded-2xl border border-dashed border-[color:var(--border)] p-8 text-center text-[color:var(--text-secondary)]">
+      No kitchen appliances yet. Start by creating one.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
