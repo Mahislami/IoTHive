@@ -70,6 +70,8 @@ services:
     tty: true
     networks:
       - iothive-network
+    profiles:
+      - tools
 
   influxdb:
     image: influxdb:2.7
@@ -87,6 +89,8 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: iot_org
       DOCKER_INFLUXDB_INIT_BUCKET: iot_bucket
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: iot_token
+    profiles:
+      - monitoring
 
   telegraf:
     image: telegraf:1.29
@@ -98,6 +102,8 @@ services:
     depends_on:
       - mosquitto
       - influxdb
+    profiles:
+      - monitoring
 
   grafana:
     image: grafana/grafana:10.2.3
@@ -110,6 +116,8 @@ services:
       - iothive-network
     depends_on:
       - influxdb
+    profiles:
+      - monitoring
 
 #  frontend:
 #    build:

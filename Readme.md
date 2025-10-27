@@ -78,6 +78,18 @@ python manage.py shell
 from devices.tasks import simulate_device_activity
 >>> simulate_device_activity.delay()
 ```
+
+### 4. Seed Demo Data (Recommended)
+
+Bootstrap demo users, kitchen appliances, standard devices, and alarm rules so the dashboards light up immediately:
+
+```bash
+docker-compose exec backend python manage.py seed_demo
+```
+
+This creates a demo administrator (`demo_admin` / `admin123`) that you can use to log in right away—be sure to change the password afterwards.
+
+If you want fresh telemetry, start the Celery worker (step above) or trigger `simulate_device_activity` again once containers are running.
 ---
 
 ## ⚙️ API Endpoints
@@ -150,6 +162,23 @@ iothive/
 * `dishwasher`, `washing_machine`, `dryer`, `oven`, `microwave`, `kettle`, `gas`, `fridge` – Smart appliances with realistic temperature/power curves that admins/operators can control via the dashboard
 
 Each powered device now publishes an additional MQTT topic under `iot/power/<device_type>/<id>`. Telegraf subscribes to the `iot/#` namespace so Grafana can present a dedicated **Power Usage** board (link exposed on the dashboard). Use the new *Control* action on appliance rows to push on/off, mode, temperature, and cycle changes back through MQTT in real time.
+
+---
+
+## 🧰 Optional Services & Profiles
+
+Docker Compose now respects profiles so you can slim down the stack:
+
+* `monitoring` – InfluxDB, Telegraf, and Grafana (enabled by default via `.env`)
+* `tools` – MQTT sample client container
+
+The repository ships with a `.env` file that sets `COMPOSE_PROFILES=monitoring,tools`, so `docker-compose up --build` behaves exactly as before. To run a lighter stack, edit `.env` and remove the profiles you do not need, or invoke Compose with an explicit list:
+
+```bash
+COMPOSE_PROFILES=monitoring docker-compose up --build
+```
+
+This keeps the original workflow intact while making it easy to toggle optional components for headless deployments or CI.
 
 ---
 
