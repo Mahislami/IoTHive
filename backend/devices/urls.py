@@ -3,7 +3,7 @@ from . import views
 
 from django.urls import path
 from .views import DeviceListView, DeviceDetailView, DeviceCreateView, DeviceUpdateView, \
-    device_delete, device_control, signup_view, dashboard_view, alarm_rules, save_alarm_rule, active_alarms, ack_alarm, clear_alarm, \
+    device_delete, device_control, dashboard_view, alarm_rules, save_alarm_rule, active_alarms, ack_alarm, clear_alarm, \
     KitchenApplianceListView, KitchenApplianceCreateView, KitchenApplianceUpdateView
 from .views import (
     DeviceListView, DeviceDetailView,
@@ -14,7 +14,6 @@ app_name = "devices"
 
 urlpatterns = [
     path('create/', DeviceCreateView.as_view(), name='device-create'),
-    path('signup/', signup_view, name='signup'),
     path('dashboard/', dashboard_view, name='dashboard'),
     path('kitchen/', KitchenApplianceListView.as_view(), name='kitchen_list'),
     path('kitchen/new/', KitchenApplianceCreateView.as_view(), name='kitchen_create'),

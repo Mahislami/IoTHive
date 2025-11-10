@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # backend/iothive/settings.py
@@ -34,7 +35,7 @@ SECRET_KEY = 'django-insecure--ic#k@n72#g_)@%)19_lg5%vo#6qmejof3_1vb&2xb-(48v%we
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
 
 # Application definition
@@ -137,3 +138,7 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Session configuration: 10-minute sliding window with keep-alive support
+SESSION_COOKIE_AGE = 600  # seconds
+SESSION_SAVE_EVERY_REQUEST = True

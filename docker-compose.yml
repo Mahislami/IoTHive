@@ -14,6 +14,8 @@ services:
       - mosquitto
     networks:
       - iothive-network
+    environment:
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,139.59.210.235"
 
   redis:
     image: redis:7
@@ -89,8 +91,6 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: iot_org
       DOCKER_INFLUXDB_INIT_BUCKET: iot_bucket
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: iot_token
-    profiles:
-      - monitoring
 
   telegraf:
     image: telegraf:1.29
@@ -102,8 +102,6 @@ services:
     depends_on:
       - mosquitto
       - influxdb
-    profiles:
-      - monitoring
 
   grafana:
     image: grafana/grafana:10.2.3
@@ -116,8 +114,25 @@ services:
       - iothive-network
     depends_on:
       - influxdb
-    profiles:
-      - monitoring
+    environment:
+      - GF_SECURITY_ADMIN_USER=iothive_admin
+      - GF_SECURITY_ADMIN_PASSWORD=Rjl!8v@Q4np2zZ7s
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+  nginx:
+    image: nginx:1.25
+    container_name: iothive-ingress
+    depends_on:
+      - backend
+      - grafana
+      - influxdb
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - iothive-network
 
 #  frontend:
 #    build:

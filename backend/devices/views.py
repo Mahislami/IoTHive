@@ -293,24 +293,19 @@ def device_control(request, pk):
     }
     return render(request, "devices/control.html", context)
 
+@login_required
+@role_required("admin")
 def signup_view(request):
+    """Restricted sign-up flow for administrators to provision new users."""
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-
-            # set role on profile (create or update)
-            role = form.cleaned_data['role']
-            UserProfile.objects.update_or_create(
-                user=user,
-                defaults={'role': role}
+            user = form.save()
+            messages.success(
+                request,
+                f"حساب کاربری {user.username} با نقش {user.userprofile.role} ایجاد شد.",
             )
-
-            login(request, user)
-            next_url = request.POST.get('next') or request.GET.get('next')
-            return redirect(next_url or 'dashboard')  # named URL or use reverse('dashboard')
+            return redirect('users:list')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})

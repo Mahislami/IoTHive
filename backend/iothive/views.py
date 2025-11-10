@@ -1,5 +1,8 @@
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 
 def home_view(request):
@@ -18,3 +21,14 @@ def home_view(request):
         "is_authenticated": is_authenticated,
     }
     return render(request, "home.html", context)
+
+
+@login_required
+@require_POST
+def keep_session_alive(request):
+    """AJAX endpoint to extend the authenticated session window."""
+    request.session.modified = True
+    return JsonResponse({
+        "status": "ok",
+        "expires_in": request.session.get_expiry_age(),
+    })

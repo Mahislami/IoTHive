@@ -21,9 +21,9 @@
       <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Home</a>
       <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
     </div>
-    <h2 class="text-3xl font-bold text-center mb-2">Create Account</h2>
+    <h2 class="text-3xl font-bold text-center mb-2">ایجاد حساب جدید توسط ادمین</h2>
     <p class="text-sm text-center text-[color:var(--text-secondary)] mb-6">
-      Join IoTHive to manage devices, monitor energy usage, and collaborate with your team in real time.
+      این فرم فقط برای مدیران سامانه در نظر گرفته شده است تا برای اعضای تیم حساب جدید بسازند.
     </p>
 
     <form method="post" class="space-y-6">
@@ -70,13 +70,13 @@
       </div>
 
       <button type="submit" class="w-full py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300">
-        Sign Up
+        ثبت حساب
       </button>
     </form>
 
     <div class="text-sm text-center text-[color:var(--text-secondary)] mt-6 space-y-1">
-      <p class="font-medium text-[color:var(--text-primary)]">Already have an account?</p>
-      <p><a href="{% url 'login' %}" class="text-[color:var(--accent-info)] hover:underline">Log in</a> to access the dashboard.</p>
+      <p class="font-medium text-[color:var(--text-primary)]">در حال حاضر وارد سیستم هستید.</p>
+      <p>برای ادامه مدیریت کاربران می‌توانید به <a href="{% url 'users:list' %}" class="text-[color:var(--accent-info)] hover:underline">فهرست کاربران</a> بازگردید.</p>
     </div>
   </div>
 </body>
