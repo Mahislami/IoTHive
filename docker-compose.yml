@@ -5,6 +5,8 @@ services:
     build:
       context: ./backend
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
     volumes:
       - ./backend:/app
     ports:
@@ -14,8 +16,6 @@ services:
       - mosquitto
     networks:
       - iothive-network
-    environment:
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,139.59.210.235"
 
   redis:
     image: redis:7
@@ -78,19 +78,14 @@ services:
   influxdb:
     image: influxdb:2.7
     container_name: influxdb
+    env_file:
+      - .env
     ports:
       - "8086:8086"
     volumes:
       - influxdb_data:/var/lib/influxdb2
     networks:
       - iothive-network
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: admin
-      DOCKER_INFLUXDB_INIT_PASSWORD: admin123
-      DOCKER_INFLUXDB_INIT_ORG: iot_org
-      DOCKER_INFLUXDB_INIT_BUCKET: iot_bucket
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: iot_token
 
   telegraf:
     image: telegraf:1.29
@@ -106,6 +101,8 @@ services:
   grafana:
     image: grafana/grafana:10.2.3
     container_name: grafana
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     volumes:
@@ -114,11 +111,6 @@ services:
       - iothive-network
     depends_on:
       - influxdb
-    environment:
-      - GF_SECURITY_ADMIN_USER=iothive_admin
-      - GF_SECURITY_ADMIN_PASSWORD=Rjl!8v@Q4np2zZ7s
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
 
   nginx:
     image: nginx:1.25
@@ -131,6 +123,8 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/.htpasswd-grafana:/etc/nginx/.htpasswd-grafana:ro
+      - ./nginx/.htpasswd-influxdb:/etc/nginx/.htpasswd-influxdb:ro
     networks:
       - iothive-network
 

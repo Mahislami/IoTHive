@@ -1,91 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Active Alarms</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg-base: #121212;
-      --surface: #1E1E2F;
-      --border: #2A2A3C;
-      --text-primary: #FFFFFF;
-      --text-secondary: #B0B0C3;
-      --accent-primary: #6366F1;
-      --accent-success: #2DD4BF;
-      --accent-warning: #FBBF24;
-      --accent-error: #F43F5E;
-      --accent-info: #38BDF8;
-      --line: #3A3A50;
-    }
-    @keyframes fade-in { from {opacity:0; transform: translateY(10px)} to {opacity:1; transform: translateY(0)} }
-    .animate-fade-in { animation: fade-in .5s ease-out }
-    .sev-info { background: rgba(56,189,248,.15); border-color: var(--accent-info); }
-    .sev-warn { background: rgba(251,191,36,.12); border-color: var(--accent-warning); }
-    .sev-crit { background: rgba(244,63,94,.12); border-color: var(--accent-error); }
-  </style>
-</head>
-<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
-  <!-- same header as dashboard -->
-  <header class="border-b border-[color:var(--line)]">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-semibold">Welcome, {{ user_display }}</h1>
+{% extends "base.html" %}
+{% block title %}Active Alarms{% endblock %}
+{% block extra_head %}
+<style>
+  .sev-info { background: rgba(56,189,248,.15); border-color: var(--accent-info); }
+  .sev-warn { background: rgba(251,191,36,.12); border-color: var(--accent-warning); }
+  .sev-crit { background: rgba(244,63,94,.12); border-color: var(--accent-error); }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold mb-1">Active Alarms</h2>
+        <p class="text-[color:var(--text-secondary)]">Live alarms that haven’t been cleared.</p>
+      </div>
       <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
         <span class="px-2 py-1 rounded-md border border-[color:var(--border)]">
           Role: <span class="font-medium capitalize">{{ role }}</span>
         </span>
-        <a href="{% url 'logout' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">
-          Logout
+        <a href="{% url 'devices:alarm_rules' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">
+          Edit Rules
         </a>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-6xl mx-auto px-6 py-10">
-    <!-- top card -->
-    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-bold mb-1">Active Alarms</h2>
-          <p class="text-[color:var(--text-secondary)]">Live alarms that haven’t been cleared.</p>
-        </div>
-        <a href="{% url 'devices:alarm_rules' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Edit Rules</a>
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      {% for ev in events %}
-        <div class="border rounded-2xl p-4 animate-fade-in
-          {% if ev.severity == 'crit' %}sev-crit{% elif ev.severity == 'warn' %}sev-warn{% else %}sev-info{% endif %}">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <div class="text-sm text-[color:var(--text-secondary)]">
-                {{ ev.created_at|date:"Y-m-d H:i" }}
-                {% if ev.acknowledged %}<span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">acknowledged</span>{% endif %}
-              </div>
-              <div class="mt-1"><span class="font-semibold">{{ ev.device.name }}</span> — {{ ev.message }}</div>
-              {% if ev.observed_value %}
-                <div class="text-sm text-[color:var(--text-secondary)] mt-1">Observed: {{ ev.observed_value }}</div>
-              {% endif %}
-              {% if ev.rule and ev.rule.note %}
-                <div class="text-sm text-[color:var(--text-secondary)] mt-1">Note: {{ ev.rule.note }}</div>
+  <div class="space-y-4">
+    {% for ev in events %}
+      <div class="border rounded-2xl p-4 animate-fade-in
+        {% if ev.severity == 'crit' %}sev-crit{% elif ev.severity == 'warn' %}sev-warn{% else %}sev-info{% endif %}">
+        <div class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <div class="text-sm text-[color:var(--text-secondary)]">
+              {{ ev.created_at|date:"Y-m-d H:i" }}
+              {% if ev.acknowledged %}
+                <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">acknowledged</span>
               {% endif %}
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <form method="post" action="{% url 'devices:ack_alarm' ev.id %}">{% csrf_token %}
-                <button class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Acknowledge</button>
-              </form>
-              <form method="post" action="{% url 'devices:clear_alarm' ev.id %}">{% csrf_token %}
-                <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-success)]/20 border border-[color:var(--accent-success)] hover:bg-[color:var(--accent-success)]/30">Clear</button>
-              </form>
-            </div>
+            <div class="mt-1"><span class="font-semibold">{{ ev.device.name }}</span> — {{ ev.message }}</div>
+            {% if ev.observed_value %}
+              <div class="text-sm text-[color:var(--text-secondary)] mt-1">Observed: {{ ev.observed_value }}</div>
+            {% endif %}
+            {% if ev.rule and ev.rule.note %}
+              <div class="text-sm text-[color:var(--text-secondary)] mt-1">Note: {{ ev.rule.note }}</div>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <form method="post" action="{% url 'devices:ack_alarm' ev.id %}">{% csrf_token %}
+              <button class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Acknowledge</button>
+            </form>
+            <form method="post" action="{% url 'devices:clear_alarm' ev.id %}">{% csrf_token %}
+              <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-success)]/20 border border-[color:var(--accent-success)] hover:bg-[color:var(--accent-success)]/30">Clear</button>
+            </form>
           </div>
         </div>
-      {% empty %}
-        <div class="text-[color:var(--text-secondary)]">No active alarms 🎉</div>
-      {% endfor %}
-    </div>
-  </main>
-</body>
-</html>
+      </div>
+    {% empty %}
+      <div class="text-[color:var(--text-secondary)]">No active alarms 🎉</div>
+    {% endfor %}
+  </div>
+{% endblock %}

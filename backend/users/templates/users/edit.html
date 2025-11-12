@@ -34,7 +34,7 @@
           Save changes
         </button>
 
-        <form method="post" action="{% url 'users:delete' u.pk %}" onsubmit="return confirm('Delete {{ u.username }}?');">
+        <form method="post" action="{% url 'users:delete' u.pk %}" data-confirm="Delete {{ u.username }}?">
           {% csrf_token %}
           <button type="submit"
                   class="px-4 py-2 border border-[color:var(--border)] rounded-lg text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">

@@ -1,37 +1,60 @@
-from django.shortcuts import render, redirect, get_object_or_404
+import json
+from urllib.parse import urljoin
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST, require_GET
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from rest_framework import generics
+
+from users.permissions import role_required
+
+from .appliances import (
+    APPLIANCE_SPECS,
+    APPLIANCE_DEVICE_TYPES,
+    get_appliance_illustration,
+    get_device_illustration,
+)
+from .forms import DeviceForm, KitchenApplianceForm, SignUpForm, StyledAuthenticationForm
+from .models import Device, UserProfile, AlarmRule, AlarmEvent
+from .serializers import DeviceSerializer
+from .timers import supports_timer, start_timer, update_timer_runtime
 from .utils import (
     publish_device_update_like_simulator,
     load_device_metadata,
     save_device_metadata,
 )
-from rest_framework import generics
-from .models import Device
-from .serializers import DeviceSerializer
-from .forms import DeviceForm, KitchenApplianceForm  # New
-from django.contrib.auth import login
-from .forms import SignUpForm
-from .forms import StyledAuthenticationForm
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.contrib.auth.models import User
-from django.views.generic import ListView, DetailView
-import json
-from .models import Device, UserProfile
-from .appliances import APPLIANCE_SPECS, get_appliance_illustration, APPLIANCE_DEVICE_TYPES
-from users.permissions import role_required
-from django.urls import reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from django.db.models import Q
-from django.urls import reverse_lazy
-from django.contrib import messages
-from .models import Device, UserProfile, AlarmRule, AlarmEvent  # add AlarmRule, AlarmEvent
-from django.views.decorators.http import require_POST, require_GET
 
 
-from .models import Device
-from .forms import DeviceForm, KitchenApplianceForm
-from .permissions import role_required  # or from users.permissions import role_required
+def _resolve_device_type_for_form(form):
+    if not form:
+        return Device.DEVICE_TYPES[0][0]
+    selected = getattr(form, "selected_type", None)
+    if selected:
+        return selected
+    if hasattr(form, "data") and form.data.get("device_type"):
+        return form.data["device_type"]
+    if form.initial.get("device_type"):
+        return form.initial["device_type"]
+    instance = getattr(form, "instance", None)
+    if instance and getattr(instance, "device_type", None):
+        return instance.device_type
+    return Device.DEVICE_TYPES[0][0]
+
+
+def _grafana_base_url(request):
+    configured = getattr(settings, "GRAFANA_PUBLIC_URL", "").strip()
+    if configured:
+        return configured if configured.endswith("/") else f"{configured}/"
+    derived = request.build_absolute_uri("/grafana/")
+    return derived if derived.endswith("/") else f"{derived}/"
 
 
 # Existing API views
@@ -98,6 +121,20 @@ class DeviceCreateView(CreateView):
     form_class = DeviceForm
     template_name = "devices/edit.html"
     success_url = reverse_lazy("devices:list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        form = ctx.get("form")
+        device_type = _resolve_device_type_for_form(form)
+        ctx["device_schematic_svg"] = get_device_illustration(device_type)
+        ctx["device_schematic_label"] = device_type.replace("_", " ").title()
+        ctx["device_schematics_map"] = {
+            value: get_device_illustration(value)
+            for value, _ in Device.DEVICE_TYPES
+            if value not in APPLIANCE_DEVICE_TYPES
+        }
+        ctx["current_device_type"] = device_type
+        return ctx
 
 
 @method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
@@ -207,6 +244,16 @@ class KitchenApplianceUpdateView(KitchenApplianceFormViewMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["is_edit"] = True
+        form = ctx.get("form")
+        device_type = _resolve_device_type_for_form(form)
+        ctx["device_schematic_svg"] = get_device_illustration(device_type)
+        ctx["device_schematic_label"] = device_type.replace("_", " ").title()
+        ctx["device_schematics_map"] = {
+            value: get_device_illustration(value)
+            for value, _ in Device.DEVICE_TYPES
+            if value not in APPLIANCE_DEVICE_TYPES
+        }
+        ctx["current_device_type"] = device_type
         return ctx
 
 
@@ -232,6 +279,7 @@ def device_control(request, pk):
 
     meta = load_device_metadata(device)
     spec = APPLIANCE_SPECS.get(device.device_type)
+    timer_supported = supports_timer(device.device_type)
 
     if request.method == "POST":
         update_fields = []
@@ -268,6 +316,32 @@ def device_control(request, pk):
             meta["cycle_progress"] = 0
             meta_changed = True
 
+        timer_action = request.POST.get("timer_action")
+        if timer_supported:
+            if timer_action == "start":
+                minutes_raw = request.POST.get("timer_minutes")
+                try:
+                    minutes = int(minutes_raw)
+                except (TypeError, ValueError):
+                    messages.error(request, "Timer duration must be a whole number of minutes.")
+                    return redirect("devices:control", pk=pk)
+                if minutes < 1 or minutes > 240:
+                    messages.error(request, "Timer duration must be between 1 and 240 minutes.")
+                    return redirect("devices:control", pk=pk)
+                meta["timer"] = start_timer(minutes)
+                if spec.get("cycles"):
+                    meta["cycle_progress"] = 0
+                meta_changed = True
+                if not device.status:
+                    device.status = True
+                    update_fields.append("status")
+            elif timer_action == "cancel":
+                if meta.pop("timer", None):
+                    meta_changed = True
+                    if device.status:
+                        device.status = False
+                        update_fields.append("status")
+
         if meta_changed and update_fields:
             save_device_metadata(
                 device,
@@ -285,11 +359,25 @@ def device_control(request, pk):
         messages.success(request, "Device control update published to MQTT.")
         return redirect("devices:detail", pk=pk)
 
+    timer_context = None
+    if timer_supported:
+        timer_data = meta.get("timer")
+        if timer_data:
+            timer_context, _ = update_timer_runtime(dict(timer_data))
+            remaining = timer_context.get("remaining_seconds")
+            if remaining is not None:
+                mins, secs = divmod(int(remaining), 60)
+                timer_context["remaining_label"] = f"{mins:02d}:{secs:02d}"
+    timer_initial_minutes = (timer_context or {}).get("duration_minutes") or 10
+
     context = {
         "device": device,
         "spec": spec,
         "meta": meta,
         "status_on": device.status,
+        "timer_supported": timer_supported,
+        "timer": timer_context,
+        "timer_initial_minutes": timer_initial_minutes,
     }
     return render(request, "devices/control.html", context)
 
@@ -303,7 +391,7 @@ def signup_view(request):
             user = form.save()
             messages.success(
                 request,
-                f"حساب کاربری {user.username} با نقش {user.userprofile.role} ایجاد شد.",
+                f"Created account {user.username} with role {user.userprofile.role}.",
             )
             return redirect('users:list')
     else:
@@ -315,20 +403,26 @@ def signup_view(request):
 def dashboard_view(request):
     user = request.user
     role = getattr(getattr(user, 'userprofile', None), 'role', 'visitor')
+    grafana_base = _grafana_base_url(request)
+    grafana_login_url = urljoin(grafana_base, "login")
+    grafana_power_url = urljoin(
+        grafana_base,
+        "d/e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5/energy-command-center?orgId=1",
+    )
 
     # Common item
     menu = [
         {
             "key": "grafana",
             "label": "Grafana Dashboard",
-            "href": "http://localhost:3000/login",  # TODO: replace
+            "href": grafana_login_url,
             "desc": "View metrics and charts",
             "icon": "activity",
         },
         {
             "key": "power_grafana",
             "label": "Power Usage",
-            "href": "http://localhost:3000/d/e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5/energy-command-center?orgId=1",
+            "href": grafana_power_url,
             "desc": "Track appliance energy consumption",
             "icon": "zap",
         },

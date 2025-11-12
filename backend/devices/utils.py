@@ -80,6 +80,7 @@ def publish_device_update_like_simulator(device, override_status=None, extra_pay
         "kettle",
         "gas",
         "fridge",
+        "tv",
     }:
         meta = load_device_metadata(device)
         if device.target_temperature is not None:
@@ -90,6 +91,17 @@ def publish_device_update_like_simulator(device, override_status=None, extra_pay
             payload["mode"] = device.mode
         if meta.get("cycle"):
             payload["cycle"] = meta["cycle"]
+        if meta.get("cycle_progress") is not None:
+            payload["cycle_progress"] = meta["cycle_progress"]
+        payload["status"] = int(bool(device.status))
+        timer = meta.get("timer")
+        if timer:
+            timer_status = timer.get("status")
+            if timer_status:
+                payload["timer_status"] = timer_status
+            remaining = timer.get("remaining_seconds")
+            if remaining is not None:
+                payload["timer_remaining_seconds"] = remaining
 
     # For sensors and unknown types we just send the base fields (no random numbers)
 

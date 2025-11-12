@@ -1,5 +1,47 @@
 {% extends "base.html" %}
 {% block title %}{% if object %}Edit{% else %}Create{% endif %} Device{% endblock %}
+{% block extra_head %}
+{{ device_schematics_map|json_script:"device-schematic-map" }}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const select = document.getElementById('id_device_type');
+    const schematic = document.getElementById('device-schematic');
+    const dataEl = document.getElementById('device-schematic-map');
+    if(!select || !schematic || !dataEl) return;
+    const map = JSON.parse(dataEl.textContent || "{}");
+    const labelEl = document.getElementById('device-schematic-label');
+
+    function updateSchematic() {
+      const value = select.value;
+      if(map[value]) {
+        schematic.innerHTML = map[value];
+        if(labelEl){
+          labelEl.textContent = value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+      }
+    }
+
+    const tempBlock = document.querySelector('[data-temp-block]');
+    const tempInputs = tempBlock ? Array.from(tempBlock.querySelectorAll('input, select, textarea')) : [];
+
+    function updateTempFields() {
+      if(!tempBlock) return;
+      const isThermostat = select.value === 'thermostat';
+      tempBlock.style.display = isThermostat ? '' : 'none';
+      tempInputs.forEach((el) => {
+        el.disabled = !isThermostat;
+      });
+    }
+
+    select.addEventListener('change', () => {
+      updateSchematic();
+      updateTempFields();
+    });
+    updateSchematic();
+    updateTempFields();
+  });
+</script>
+{% endblock %}
 {% block content %}
 <div class="max-w-xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
@@ -13,44 +55,59 @@
 
     <form method="post" class="space-y-4">
       {% csrf_token %}
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Name</label>
-        {{ form.name }}
-        {% if form.name.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.name.errors.0 }}</p>{% endif %}
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Type</label>
-        {{ form.device_type }}
-        {% if form.device_type.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.device_type.errors.0 }}</p>{% endif %}
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Status</label>
-        {{ form.status }}
-        {% if form.status.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.status.errors.0 }}</p>{% endif %}
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Topic</label>
-        {{ form.topic }}
-        {% if form.topic.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.topic.errors.0 }}</p>{% endif %}
-        <p class="text-xs text-[color:var(--text-secondary)] mt-1">MQTT topic that this device publishes to.</p>
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Power Rating (W)</label>
-        {{ form.power_rating_watts }}
-        <p class="text-xs text-[color:var(--text-secondary)] mt-1">Typical draw when the device is actively running.</p>
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Target Temperature (°C)</label>
-        {{ form.target_temperature }}
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Mode</label>
-        {{ form.mode }}
-      </div>
-      <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Metadata (JSON)</label>
-        {{ form.metadata }}
-        {% if form.metadata.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.metadata.errors.0 }}</p>{% endif %}
+      <div class="grid gap-6 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.name.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Type</label>
+            {{ form.device_type }}
+            {% if form.device_type.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.device_type.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Status</label>
+            {{ form.status }}
+            {% if form.status.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.status.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Topic</label>
+            {{ form.topic }}
+            {% if form.topic.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.topic.errors.0 }}</p>{% endif %}
+            <p class="text-xs text-[color:var(--text-secondary)] mt-1">MQTT topic that this device publishes to.</p>
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Power Rating (W)</label>
+            {{ form.power_rating_watts }}
+            <p class="text-xs text-[color:var(--text-secondary)] mt-1">Typical draw when the device is actively running.</p>
+          </div>
+          <div data-temp-block {% if current_device_type != 'thermostat' %}style="display:none;"{% endif %}>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Target Temperature (°C)</label>
+            {{ form.target_temperature }}
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Mode</label>
+            {{ form.mode }}
+          </div>
+          <div>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Metadata (JSON)</label>
+            {{ form.metadata }}
+            {% if form.metadata.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.metadata.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg-base)] p-6 flex flex-col items-center justify-between">
+          <div class="w-full text-sm text-[color:var(--text-secondary)] mb-4">Schematic</div>
+          <div class="flex-1 flex items-center justify-center w-full">
+            <div class="w-48" aria-hidden="true" id="device-schematic">
+              {{ device_schematic_svg|safe }}
+            </div>
+          </div>
+          <p class="mt-4 text-xs text-[color:var(--text-secondary)] uppercase tracking-wide" id="device-schematic-label">
+            {{ device_schematic_label|default:"Device" }}
+          </p>
+        </div>
       </div>
 
       <div class="mt-6 flex items-center gap-3">

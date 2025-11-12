@@ -69,7 +69,7 @@
       {% endif %}
       <a href="{% url 'devices:edit' device.pk %}"
          class="px-4 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg hover:bg-indigo-700">Edit</a>
-      <form method="post" action="{% url 'devices:delete' device.pk %}" onsubmit="return confirm('Delete {{ device.name }}?');">
+      <form method="post" action="{% url 'devices:delete' device.pk %}" data-confirm="Delete {{ device.name }}?">
         {% csrf_token %}
         <button class="px-4 py-2 border border-[color:var(--border)] rounded-lg text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">Delete</button>
       </form>

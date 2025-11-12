@@ -60,8 +60,7 @@
                          class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>
                     </li>
                     <li class="border-t border-[color:var(--border)]">
-                      <form method="post" action="{% url 'users:delete' u.pk %}"
-                            onsubmit="return confirm('Delete {{ u.username }}?');">
+                      <form method="post" action="{% url 'users:delete' u.pk %}" data-confirm="Delete {{ u.username }}?">
                         {% csrf_token %}
                         <button type="submit"
                                 class="w-full text-left px-4 py-2 text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">

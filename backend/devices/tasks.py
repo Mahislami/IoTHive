@@ -3,8 +3,9 @@ import random
 import json
 import paho.mqtt.publish as publish
 from django.db.models import Exists, OuterRef
+from django.utils import timezone
 
-from .models import Device, AlarmRule
+from .models import Device, AlarmRule, AlarmEvent
 from .alarms import evaluate_device_alarms
 from .utils import load_device_metadata, save_device_metadata
 from .appliances import (
@@ -12,6 +13,8 @@ from .appliances import (
     AMBIENT_TEMPERATURE,
     get_appliance_spec,
 )
+from .timers import supports_timer, update_timer_runtime
+from .power import compute_appliance_draw
 
 # --- MQTT config (same as before) ---
 MQTT_BROKER = 'mosquitto-broker'
@@ -55,7 +58,57 @@ def _publish_power(device, extra=None):
         payload["mode"] = device.mode
     if extra:
         payload.update(extra)
+    meta = load_device_metadata(device)
+    if device.device_type in APPLIANCE_SPECS:
+        _enrich_appliance_payload(payload, device, meta)
     _pub(_power_topic(device), payload)
+
+
+def _enrich_appliance_payload(payload, device, meta):
+    payload["status"] = int(bool(device.status))
+    timer = (meta or {}).get("timer")
+    if timer:
+        timer_status = timer.get("status")
+        if timer_status:
+            payload["timer_status"] = timer_status
+        remaining = timer.get("remaining_seconds")
+        if remaining is not None:
+            payload["timer_remaining_seconds"] = remaining
+
+
+def _complete_timer(device, meta, spec):
+    timer = meta.get("timer") or {}
+    if timer.get("notified"):
+        return
+    timer["completed_at"] = timezone.now().isoformat()
+    timer["status"] = "completed"
+    timer["notified"] = True
+    meta["timer"] = timer
+    message = f"{device.name} timer finished"
+    observed = f"{timer.get('duration_minutes')} min" if timer.get("duration_minutes") else ""
+    event = AlarmEvent.objects.create(
+        device=device,
+        rule=None,
+        message=message,
+        severity="info",
+        observed_value=observed,
+    )
+    timer["alarm_event_id"] = event.id
+    if spec and spec.get("cycles"):
+        meta["cycle_progress"] = 100
+    device.status = False
+
+
+def _handle_timer_meta(device, meta, spec):
+    if not supports_timer(device.device_type):
+        return
+    timer = meta.get("timer")
+    if not timer or timer.get("status") not in {"running", "completed"}:
+        return
+    timer, completed = update_timer_runtime(timer)
+    meta["timer"] = timer
+    if completed:
+        _complete_timer(device, meta, spec)
 
 
 def _initialize_appliance_state(device):
@@ -82,7 +135,9 @@ def _initialize_appliance_state(device):
                 device.current_temperature = min(high, device.target_temperature + offset)
     if device.device_type == "fridge":
         device.status = True  # fridges stay on
-    device.current_power_watts = round(_rand_span(spec["idle"]), 2)
+    base_idle = _rand_span(spec["idle"])
+    adjusted = compute_appliance_draw(device, spec, base_idle, meta, bool(device.status))
+    device.current_power_watts = round(adjusted, 2)
     _persist_state(
         device,
         meta,
@@ -102,10 +157,14 @@ def _tick_appliance(device):
     if not spec:
         return None, None
     meta = load_device_metadata(device)
+    _handle_timer_meta(device, meta, spec)
+    timer_state = meta.get("timer") or {}
+    timer_completed = timer_state.get("status") == "completed"
     running = bool(device.status)
     if device.device_type == "fridge":
         running = True
     draw = _rand_span(spec["active"] if running else spec["idle"])
+    draw = compute_appliance_draw(device, spec, draw, meta, running)
 
     if spec.get("temp_range"):
         target = device.target_temperature
@@ -128,11 +187,13 @@ def _tick_appliance(device):
 
     if spec.get("cycles"):
         progress = meta.get("cycle_progress", 0)
-        if running:
+        if timer_completed:
+            progress = 100
+        elif running:
             progress = min(100, progress + random.uniform(5, 18))
         else:
             progress = max(0, progress - random.uniform(4, 10))
-        if progress >= 100 and device.device_type != "fridge":
+        if progress >= 100 and device.device_type != "fridge" and not timer_completed:
             device.status = False
             progress = 0
         meta["cycle_progress"] = round(progress, 1)
@@ -225,6 +286,7 @@ def simulate_device_activity():
                 payload["cycle_progress"] = meta["cycle_progress"]
             if meta.get("cycle"):
                 payload["cycle"] = meta["cycle"]
+            _enrich_appliance_payload(payload, device, meta)
 
         else:
             payload["message"] = "Unknown device update"
@@ -322,6 +384,8 @@ def initialize_device_state():
         elif device.device_type in APPLIANCE_SPECS:
             _initialize_appliance_state(device)
             meta = load_device_metadata(device)
+            spec = APPLIANCE_SPECS.get(device.device_type)
+            _handle_timer_meta(device, meta, spec)
             payload.update({
                 "power_w": round(device.current_power_watts, 2),
                 "mode": device.mode,
@@ -334,6 +398,7 @@ def initialize_device_state():
                 payload["cycle"] = meta["cycle"]
             if meta.get("cycle_progress") is not None:
                 payload["cycle_progress"] = meta["cycle_progress"]
+            _enrich_appliance_payload(payload, device, meta)
 
         else:
             payload["message"] = "Unknown device initial state"
@@ -424,6 +489,7 @@ def tick_dynamic_devices():
                 payload["cycle"] = meta["cycle"]
             if meta.get("cycle_progress") is not None:
                 payload["cycle_progress"] = meta["cycle_progress"]
+            _enrich_appliance_payload(payload, device, meta)
 
         else:
             # Skip sensors/unknowns here (or include if you want)

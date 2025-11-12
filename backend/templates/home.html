@@ -2,17 +2,17 @@
 {% load static %}
 {% block title %}IoTHive | Energy Command Center{% endblock %}
 {% block content %}
-<div class="min-h-[60vh] flex flex-col justify-center gap-12">
-  <section class="grid gap-10 lg:grid-cols-[1.3fr,1fr] items-center">
-    <div class="space-y-6">
-      <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-1 text-xs uppercase tracking-wide text-[color:var(--text-secondary)]">
-        Welcome to IoTHive
+<div class="flex flex-col justify-center gap-8 py-6">
+  <section class="grid gap-6 lg:grid-cols-[1fr,0.8fr] items-center">
+    <div class="space-y-4">
+      <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-1 text-[10px] uppercase tracking-wide text-[color:var(--text-secondary)]">
+        IoTHive · Unified MQTT Lab
       </span>
-      <h1 class="text-4xl md:text-5xl font-bold leading-tight">
-        Realistic IoT energy telemetry, actionable alarms, and AI-ready data flows.
+      <h1 class="text-3xl md:text-4xl font-bold leading-tight">
+        A full-stack MQTT lab for simulating and supervising modern IoT fleets.
       </h1>
-      <p class="text-lg text-[color:var(--text-secondary)]">
-        Monitor every device across your facility, replay rich power usage scenarios, and prepare your fleet for intelligent forecasting models. Operators can take control instantly, while administrators orchestrate the entire environment.
+      <p class="text-base text-[color:var(--text-secondary)]">
+        Mosquitto handles live topics, Telegraf streams into InfluxDB, Grafana renders power/timer telemetry, and the control panel pushes commands back over MQTT in real time—no physical hardware required.
       </p>
       <div class="flex flex-wrap items-center gap-3">
         <a href="{{ primary_cta_url }}"
@@ -31,35 +31,29 @@
           </a>
         {% endif %}
       </div>
-      <p class="text-sm text-[color:var(--text-secondary)]">
-        New accounts are provisioned by system administrators; please reach out to your team lead if you need access.
+      <p class="text-xs text-[color:var(--text-secondary)]">
+        Accounts are provisioned by administrators; ask your team lead for access.
       </p>
     </div>
-    <div class="relative mx-auto max-w-xl rounded-3xl overflow-hidden shadow-lg">
+    <div class="relative mx-auto max-w-md rounded-3xl overflow-hidden shadow-lg">
       <img src="{% static 'images/homeImage.jpg' %}"
            alt="Smart home schematic hovering above a hand with IoT icons around it"
            class="w-full h-auto object-cover">
     </div>
   </section>
 
-  <section class="grid gap-6 md:grid-cols-3">
-    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
-      <h3 class="text-lg font-semibold mb-2">AI-ready Data Layer</h3>
-      <p class="text-[color:var(--text-secondary)] text-sm">
-        Generate rich, labelled datasets for forecasting models right from synthetic yet realistic appliance behaviour.
-      </p>
+  <section class="grid gap-3 md:grid-cols-3 text-sm text-[color:var(--text-secondary)]">
+    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Full appliance roster</h3>
+      <p>Kitchen gear, thermostats, switches, TVs, and sensors all emit <code>iot/#</code> payloads with cycle progress, mode, timers, and power draw.</p>
     </article>
-    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
-      <h3 class="text-lg font-semibold mb-2">Role-based Control</h3>
-      <p class="text-[color:var(--text-secondary)] text-sm">
-        Separate administrator orchestration from operator actions with guardrails baked into every workflow.
-      </p>
+    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Real-time analytics</h3>
+      <p>Telegraf + InfluxDB keep Grafana boards current, enabling anomaly detection and ML training on the exact stream operators manipulate.</p>
     </article>
-    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6">
-      <h3 class="text-lg font-semibold mb-2">Alarm & Compliance</h3>
-      <p class="text-[color:var(--text-secondary)] text-sm">
-        Kitchen appliances integrate directly into alarm categories so critical alerts are never missed.
-      </p>
+    <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Operator guardrails</h3>
+      <p>Role-based controls let staff toggle appliances, schedule timers, and push commands back over MQTT while admins seed inventory and tune alarms.</p>
     </article>
   </section>
 </div>

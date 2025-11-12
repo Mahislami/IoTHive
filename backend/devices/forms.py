@@ -53,12 +53,22 @@ class DeviceForm(forms.ModelForm):
         self.fields["power_rating_watts"].widget.attrs["placeholder"] = "e.g. 1800"
         self.fields["target_temperature"].widget.attrs["placeholder"] = "Optional target °C"
         self.fields["mode"].widget.attrs["placeholder"] = "eco / normal / turbo"
+        self.selected_type = self._resolve_device_type()
 
     def clean_device_type(self):
         value = self.cleaned_data["device_type"]
         if value in APPLIANCE_DEVICE_TYPES:
             raise forms.ValidationError("Kitchen appliances must be created from the dedicated workflow.")
         return value
+
+    def _resolve_device_type(self):
+        if self.data and self.data.get("device_type"):
+            return self.data["device_type"]
+        if self.initial.get("device_type"):
+            return self.initial["device_type"]
+        if self.instance and getattr(self.instance, "pk", None):
+            return self.instance.device_type
+        return Device.DEVICE_TYPES[0][0]
 
 
 class SignUpForm(forms.ModelForm):
@@ -169,7 +179,7 @@ class KitchenApplianceForm(forms.ModelForm):
             self.appliance_field_configs.append(cfg)
 
     def _resolve_device_type(self):
-        if self.data.get("device_type"):
+        if self.data and self.data.get("device_type"):
             return self.data["device_type"]
         if self.initial.get("device_type"):
             return self.initial["device_type"]

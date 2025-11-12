@@ -1,6 +1,7 @@
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
@@ -32,3 +33,10 @@ def keep_session_alive(request):
         "status": "ok",
         "expires_in": request.session.get_expiry_age(),
     })
+
+
+@login_required
+def logout_view(request):
+    """Explicit logout endpoint that always redirects home."""
+    logout(request)
+    return redirect("home")

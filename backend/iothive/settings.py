@@ -20,6 +20,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CORS_ALLOW_ALL_ORIGINS = True
 LOGIN_REDIRECT_URL = '/dashboard/'
+GRAFANA_PUBLIC_URL = os.environ.get("GRAFANA_PUBLIC_URL", "").strip()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

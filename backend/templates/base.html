@@ -1,30 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}App{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg-base: #121212;
-      --surface: #1E1E2F;
-      --border: #2A2A3C;
-      --text-primary: #FFFFFF;
-      --text-secondary: #B0B0C3;
-      --accent-primary: #6366F1;
-      --accent-success: #2DD4BF;
-      --accent-warning: #FBBF24;
-      --accent-error: #F43F5E;
-      --accent-info: #38BDF8;
-      --line: #3A3A50;
-    }
-    @keyframes fade-in { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
-    .animate-fade-in { animation: fade-in .5s ease-out }
-  </style>
+<style>
+  :root {
+    --bg-base: #121212;
+    --surface: #1E1E2F;
+    --border: #2A2A3C;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0C3;
+    --accent-primary: #6366F1;
+    --accent-success: #2DD4BF;
+    --accent-warning: #FBBF24;
+    --accent-error: #F43F5E;
+    --accent-info: #38BDF8;
+    --line: #3A3A50;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("{% static 'images/circuit.png' %}");
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: -1;
+  }
+  @keyframes fade-in { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
+  .animate-fade-in { animation: fade-in .5s ease-out }
+</style>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen">
+<body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] min-h-screen relative overflow-x-hidden"
+  {% if request.user.is_authenticated %}data-logout-url="{% url 'logout' %}"{% endif %}>
   <header class="border-b border-[color:var(--line)]">
     <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3 text-sm">
@@ -43,12 +56,13 @@
       <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
         {% if request.user.is_authenticated %}
           <span>{{ request.user.username }}</span>
-          <form method="post" action="{% url 'logout' %}">
+          <form id="logout-form" method="post" action="{% url 'logout' %}" class="hidden">
             {% csrf_token %}
-            <button type="submit" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] text-[color:var(--text-primary)]">
-              Logout
-            </button>
           </form>
+          <button type="button" data-logout-trigger
+                  class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] text-[color:var(--text-primary)]">
+            Logout
+          </button>
         {% else %}
           <a href="{% url 'login' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Login</a>
         {% endif %}
@@ -63,22 +77,58 @@
   <div id="session-timeout-modal"
        class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
        data-session-seconds="{{ request.session.get_expiry_age }}"
+       data-default-seconds="600"
        data-warning-sec="60"
        data-logout-url="{% url 'logout' %}"
        data-keepalive-url="{% url 'session_keepalive' %}">
     <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl max-w-md w-full p-6 space-y-4 text-center">
-      <h3 class="text-xl font-semibold">اتصال شما رو به پایان است</h3>
+      <h3 class="text-xl font-semibold">Your session is about to expire</h3>
       <p class="text-sm text-[color:var(--text-secondary)]">
-        برای حفظ امنیت، نشست کاربران پس از ۱۰ دقیقه غیرفعال می‌شود. آیا مایل هستید آن را ادامه دهید؟
+        For security reasons sessions end after 10 minutes of inactivity. Would you like to keep it alive?
       </p>
+      <p id="session-countdown" class="text-lg font-mono text-white"></p>
       <div class="flex flex-col sm:flex-row gap-3">
         <button id="session-extend"
                 class="flex-1 px-4 py-2 rounded-lg bg-[color:var(--accent-primary)] text-white">
-          ادامه جلسه
+          Continue Session
         </button>
         <button id="session-logout"
                 class="flex-1 px-4 py-2 rounded-lg border border-[color:var(--border)]">
-          خروج
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="logout-confirm-modal"
+       class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
+    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl max-w-sm w-full p-6 space-y-4 text-center">
+      <h3 class="text-xl font-semibold">Sign out?</h3>
+      <p class="text-sm text-[color:var(--text-secondary)]">You will be redirected to the home page after logging out.</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="logout-cancel"
+                class="flex-1 px-4 py-2 rounded-lg border border-[color:var(--border)]">
+          Stay Logged In
+        </button>
+        <button id="logout-confirm"
+                class="flex-1 px-4 py-2 rounded-lg bg-[color:var(--accent-error)] text-white">
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="action-confirm-modal"
+       class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">
+    <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl max-w-sm w-full p-6 space-y-4 text-center">
+      <h3 class="text-xl font-semibold">Please confirm</h3>
+      <p id="action-confirm-message" class="text-sm text-[color:var(--text-secondary)]">Are you sure?</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="action-confirm-cancel"
+                class="flex-1 px-4 py-2 rounded-lg border border-[color:var(--border)]">
+          Cancel
+        </button>
+        <button id="action-confirm-confirm"
+                class="flex-1 px-4 py-2 rounded-lg bg-[color:var(--accent-error)] text-white">
+          Continue
         </button>
       </div>
     </div>
@@ -86,14 +136,82 @@
   <script>
   (function(){
     const modal = document.getElementById('session-timeout-modal');
+    const logoutForm = document.getElementById('logout-form');
+    const logoutTriggers = document.querySelectorAll('[data-logout-trigger]');
+    const logoutConfirmModal = document.getElementById('logout-confirm-modal');
+    const logoutConfirmBtn = document.getElementById('logout-confirm');
+    const logoutCancelBtn = document.getElementById('logout-cancel');
+    const logoutUrl = document.body.dataset.logoutUrl || (modal ? modal.dataset.logoutUrl : null);
+    const actionConfirmModal = document.getElementById('action-confirm-modal');
+    const actionConfirmMessage = document.getElementById('action-confirm-message');
+    const actionConfirmConfirm = document.getElementById('action-confirm-confirm');
+    const actionConfirmCancel = document.getElementById('action-confirm-cancel');
+    let pendingConfirmForm = null;
+
+    function submitLogoutForm() {
+      if (logoutForm) {
+        logoutForm.submit();
+      } else if (logoutUrl) {
+        window.location.href = logoutUrl;
+      }
+    }
+
+    function bindFormConfirms() {
+      document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        if (form.dataset.confirmBound) return;
+        form.dataset.confirmBound = "true";
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          pendingConfirmForm = form;
+          if (actionConfirmMessage) {
+            actionConfirmMessage.textContent = form.dataset.confirm || "Are you sure?";
+          }
+          actionConfirmModal?.classList.remove('hidden');
+        });
+      });
+    }
+
+    bindFormConfirms();
+
+    actionConfirmCancel?.addEventListener('click', () => {
+      actionConfirmModal?.classList.add('hidden');
+      pendingConfirmForm = null;
+    });
+
+    actionConfirmConfirm?.addEventListener('click', () => {
+      actionConfirmModal?.classList.add('hidden');
+      if (pendingConfirmForm) {
+        pendingConfirmForm.submit();
+        pendingConfirmForm = null;
+      }
+    });
+
+    logoutTriggers.forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault();
+        logoutConfirmModal?.classList.remove('hidden');
+      });
+    });
+
+    logoutConfirmBtn?.addEventListener('click', () => {
+      logoutConfirmModal?.classList.add('hidden');
+      submitLogoutForm();
+    });
+
+    logoutCancelBtn?.addEventListener('click', () => {
+      logoutConfirmModal?.classList.add('hidden');
+    });
+
     if(!modal) return;
     const extendBtn = document.getElementById('session-extend');
     const logoutBtn = document.getElementById('session-logout');
     const warningOffset = Number(modal.dataset.warningSec || 60);
-    const logoutUrl = modal.dataset.logoutUrl;
     const keepAliveUrl = modal.dataset.keepaliveUrl;
     let warningTimer = null;
     let expiryTimer = null;
+    let countdownInterval = null;
+    let expiryTimestamp = null;
+    const countdownLabel = document.getElementById('session-countdown');
 
     function getCookie(name){
       const value = `; ${document.cookie}`;
@@ -105,7 +223,9 @@
     function scheduleTimers(seconds){
       clearTimeout(warningTimer);
       clearTimeout(expiryTimer);
+      clearInterval(countdownInterval);
       if(!seconds || seconds <= 0) return;
+      expiryTimestamp = Date.now() + seconds * 1000;
       const warnMs = Math.max((seconds - warningOffset) * 1000, 0);
       warningTimer = setTimeout(showWarning, warnMs);
       expiryTimer = setTimeout(forceLogout, seconds * 1000);
@@ -113,14 +233,26 @@
 
     function showWarning(){
       modal.classList.remove('hidden');
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
     }
 
     function hideWarning(){
       modal.classList.add('hidden');
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
+    function updateCountdown(){
+      if(!countdownLabel || !expiryTimestamp) return;
+      const remaining = Math.max(0, Math.floor((expiryTimestamp - Date.now()) / 1000));
+      const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const seconds = String(remaining % 60).padStart(2, '0');
+      countdownLabel.textContent = `${minutes}:${seconds}`;
     }
 
     function forceLogout(){
-      window.location.href = logoutUrl;
+      submitLogoutForm();
     }
 
     function extendSession(){
@@ -154,7 +286,12 @@
       forceLogout();
     });
 
-    const initialSeconds = Number(modal.dataset.sessionSeconds || 0);
+    const rawSeconds = modal.dataset.sessionSeconds || '';
+    const fallbackSeconds = Number(modal.dataset.defaultSeconds || 600);
+    let initialSeconds = parseInt(rawSeconds, 10);
+    if (Number.isNaN(initialSeconds)) {
+      initialSeconds = fallbackSeconds;
+    }
     scheduleTimers(initialSeconds);
   })();
   </script>

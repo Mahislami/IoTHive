@@ -19,6 +19,7 @@ class Device(models.Model):
         ('kettle', 'Kettle'),
         ('gas', 'Gas Range'),
         ('fridge', 'Fridge'),
+        ('tv', 'TV'),
     )
 
     name = models.CharField(max_length=255)
