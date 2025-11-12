@@ -1,5 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{% if object %}Edit{% else %}Create{% endif %} Device{% endblock %}
+{% load i18n %}
+{% block title %}
+  {% if object %}
+    {% blocktrans with device_name=object.name %}Edit {{ device_name }}{% endblocktrans %}
+  {% else %}
+    {% trans "Create Device" %}
+  {% endif %}
+{% endblock %}
 {% block extra_head %}
 {{ device_schematics_map|json_script:"device-schematic-map" }}
 <script>
@@ -46,11 +53,15 @@
 <div class="max-w-xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
     <div class="flex items-center justify-between text-sm mb-4">
-      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Home</a>
-      <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
+      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Home" %}</a>
+      <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Back" %}</a>
     </div>
     <h1 class="text-2xl font-bold mb-6">
-      {% if object %}Edit {{ object.name }}{% else %}Create Device{% endif %}
+      {% if object %}
+        {% blocktrans with device_name=object.name %}Edit {{ device_name }}{% endblocktrans %}
+      {% else %}
+        {% trans "Create Device" %}
+      {% endif %}
     </h1>
 
     <form method="post" class="space-y-4">
@@ -58,54 +69,58 @@
       <div class="grid gap-6 lg:grid-cols-3">
         <div class="space-y-4 lg:col-span-2">
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Name</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Name" %}</label>
             {{ form.name }}
             {% if form.name.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.name.errors.0 }}</p>{% endif %}
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Type</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Type" %}</label>
             {{ form.device_type }}
             {% if form.device_type.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.device_type.errors.0 }}</p>{% endif %}
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Status</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Status" %}</label>
             {{ form.status }}
             {% if form.status.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.status.errors.0 }}</p>{% endif %}
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Topic</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Topic" %}</label>
             {{ form.topic }}
             {% if form.topic.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.topic.errors.0 }}</p>{% endif %}
-            <p class="text-xs text-[color:var(--text-secondary)] mt-1">MQTT topic that this device publishes to.</p>
+            <p class="text-xs text-[color:var(--text-secondary)] mt-1">{% trans "MQTT topic that this device publishes to." %}</p>
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Power Rating (W)</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Power Rating (W)" %}</label>
             {{ form.power_rating_watts }}
-            <p class="text-xs text-[color:var(--text-secondary)] mt-1">Typical draw when the device is actively running.</p>
+            <p class="text-xs text-[color:var(--text-secondary)] mt-1">{% trans "Typical draw when the device is actively running." %}</p>
           </div>
           <div data-temp-block {% if current_device_type != 'thermostat' %}style="display:none;"{% endif %}>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Target Temperature (°C)</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Target Temperature (°C)" %}</label>
             {{ form.target_temperature }}
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Mode</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Mode" %}</label>
             {{ form.mode }}
           </div>
           <div>
-            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Metadata (JSON)</label>
+            <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Metadata (JSON)" %}</label>
             {{ form.metadata }}
             {% if form.metadata.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.metadata.errors.0 }}</p>{% endif %}
           </div>
         </div>
         <div class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg-base)] p-6 flex flex-col items-center justify-between">
-          <div class="w-full text-sm text-[color:var(--text-secondary)] mb-4">Schematic</div>
+          <div class="w-full text-sm text-[color:var(--text-secondary)] mb-4">{% trans "Schematic" %}</div>
           <div class="flex-1 flex items-center justify-center w-full">
             <div class="w-48" aria-hidden="true" id="device-schematic">
               {{ device_schematic_svg|safe }}
             </div>
           </div>
           <p class="mt-4 text-xs text-[color:var(--text-secondary)] uppercase tracking-wide" id="device-schematic-label">
-            {{ device_schematic_label|default:"Device" }}
+            {% if device_schematic_label %}
+              {{ device_schematic_label }}
+            {% else %}
+              {% trans "Device" %}
+            {% endif %}
           </p>
         </div>
       </div>
@@ -113,12 +128,12 @@
       <div class="mt-6 flex items-center gap-3">
         <button type="submit"
                 class="px-4 py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700">
-          Save
+          {% trans "Save" %}
         </button>
         <a href="javascript:history.back()"
-           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Back</a>
+           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Back" %}</a>
         <a href="{% url 'home' %}"
-           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Home</a>
+           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Home" %}</a>
       </div>
     </form>
   </div>

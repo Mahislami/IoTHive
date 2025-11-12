@@ -1,10 +1,10 @@
-{% load extras %}
+{% load extras i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Log in</title>
+  <title>{% trans "Log in" %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
@@ -19,12 +19,28 @@
 <body class="bg-[color:var(--bg-base)] text-[color:var(--text-primary)] flex items-center justify-center min-h-screen">
   <div class="bg-[color:var(--surface)] shadow-xl rounded-2xl p-10 w-full max-w-md animate-fade-in border border-[color:var(--border)]">
     <div class="flex items-center justify-between text-sm mb-6">
-      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Home</a>
-      <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">Back</a>
+      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Home" %}</a>
+      <div class="flex items-center gap-2">
+        <form method="post" action="{% url 'set_language' %}" class="flex items-center gap-1 text-xs">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path|default:request.path|default:'/' }}">
+          {% with active_lang=LANGUAGE_CODE|default:'en' %}
+            <button type="submit" name="language" value="en"
+                    class="px-2 py-1 rounded-md border border-[color:var(--border)] {% if active_lang|slice:":2" == 'en' %}bg-[color:var(--accent-primary)] text-white{% endif %}">
+              EN
+            </button>
+            <button type="submit" name="language" value="fa"
+                    class="px-2 py-1 rounded-md border border-[color:var(--border)] {% if active_lang|slice:":2" == 'fa' %}bg-[color:var(--accent-primary)] text-white{% endif %}">
+              فا
+            </button>
+          {% endwith %}
+        </form>
+        <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Back" %}</a>
+      </div>
     </div>
-    <h2 class="text-3xl font-bold text-[color:var(--text-primary)] text-center mb-4">Welcome Back</h2>
+    <h2 class="text-3xl font-bold text-[color:var(--text-primary)] text-center mb-4">{% trans "Welcome Back" %}</h2>
     <p class="text-sm text-center text-[color:var(--text-secondary)] mb-6">
-      Sign in to control devices and review telemetry. Admins can add new members from the dashboard after logging in.
+      {% blocktrans %}Sign in to control devices and review telemetry. Admins can add new members from the dashboard after logging in.{% endblocktrans %}
     </p>
 
     <form method="post" class="space-y-6">
@@ -50,11 +66,11 @@
         {% endif %}
       </div>
 
-      <button type="submit" class="w-full py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300">Login</button>
+      <button type="submit" class="w-full py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300">{% trans "Login" %}</button>
     </form>
 
     <p class="text-sm text-center text-[color:var(--text-secondary)] mt-6">
-      Need access? Contact your system administrator to create an account from the dashboard.
+      {% blocktrans %}Need access? Contact your system administrator to create an account from the dashboard.{% endblocktrans %}
     </p>
   </div>
 </body>

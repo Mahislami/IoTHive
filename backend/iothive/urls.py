@@ -19,9 +19,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from devices.views import signup_view, dashboard_view
 from devices.forms import StyledAuthenticationForm
-from iothive.views import home_view, keep_session_alive, logout_view
-
-
+from iothive.views import home_view, keep_session_alive, logout_view, grafana_login_proxy
 
 urlpatterns = [
     path('', home_view, name='home'),
@@ -30,8 +28,9 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('signup/', signup_view, name='signup'),
     path('session/keepalive/', keep_session_alive, name='session_keepalive'),
+    path('grafana/login/', grafana_login_proxy, name='grafana_login'),
     path("devices/", include(("devices.urls", "devices"), namespace="devices")),
     path("users/", include(("users.urls", "users"), namespace="users")),
     path("dashboard/", dashboard_view, name="dashboard"),
-    
+    path("i18n/", include("django.conf.urls.i18n")),
 ]

@@ -1,21 +1,24 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard" %}{% endblock %}
 {% block content %}
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold mb-2">Dashboard</h2>
-        <p class="text-[color:var(--text-secondary)]">Quick actions based on your role.</p>
+        <h2 class="text-2xl font-bold mb-2">{% trans "Dashboard" %}</h2>
+        <p class="text-[color:var(--text-secondary)]">{% trans "Quick actions based on your role." %}</p>
       </div>
       <span class="px-2 py-1 rounded-md border border-[color:var(--border)] text-sm text-[color:var(--text-secondary)]">
-        Role: <span class="font-medium capitalize">{{ role }}</span>
+        {% trans "Role" %}: <span class="font-medium capitalize">{{ role }}</span>
       </span>
     </div>
   </div>
 
   <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     {% for item in menu %}
-      <a href="{{ item.href }}" class="block group bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 hover:border-[color:var(--accent-primary)] transition animate-fade-in">
+      <a href="{{ item.href }}"
+         class="block group bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 hover:border-[color:var(--accent-primary)] transition animate-fade-in"
+         {% if item.requires_grafana_login %}data-grafana-link="true"{% endif %}>
         <div class="flex items-start justify-between">
           <h3 class="text-lg font-semibold">{{ item.label }}</h3>
           <span class="w-2 h-2 rounded-full bg-[color:var(--accent-primary)] mt-2 group-hover:scale-125 transition"></span>
@@ -23,13 +26,13 @@
         <p class="mt-2 text-sm text-[color:var(--text-secondary)]">{{ item.desc }}</p>
         <div class="mt-5">
           <span class="inline-flex items-center px-3 py-1 rounded-lg bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-            Open
+            {% trans "Open" %}
           </span>
         </div>
       </a>
     {% empty %}
       <div class="col-span-full text-[color:var(--text-secondary)]">
-        No actions available for your role.
+        {% trans "No actions available for your role." %}
       </div>
     {% endfor %}
   </section>

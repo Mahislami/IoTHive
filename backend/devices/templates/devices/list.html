@@ -1,22 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Devices{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Devices" %}{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto px-6 py-10">
 
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Devices</h1>
+    <h1 class="text-2xl font-bold">{% trans "Devices" %}</h1>
     <div class="flex items-center gap-3">
       <form method="get" class="w-full max-w-sm">
         <input name="q" value="{{ request.GET.q }}"
                class="w-full px-4 py-2 border border-[color:var(--border)] bg-[color:var(--bg-base)]
                       text-[color:var(--text-primary)] rounded-lg focus:outline-none focus:ring-2
                       focus:ring-[color:var(--accent-primary)]"
-               placeholder="Search by name, topic, or type">
+               placeholder="{% trans 'Search by name, topic, or type' %}">
       </form>
       {% if request.user.userprofile.role in "admin operator" %}
       <a href="{% url 'devices:create' %}"
          class="px-3 py-2 rounded-lg bg-[color:var(--accent-primary)] text-white hover:bg-indigo-700">
-        New Device
+        {% trans "New Device" %}
       </a>
       {% endif %}
     </div>
@@ -27,12 +28,12 @@
     <a href="{% url 'devices:kitchen_list' %}"
        class="group flex flex-col justify-between rounded-2xl border border-[color:var(--border)] bg-gradient-to-br from-purple-900/50 to-indigo-900/30 p-5">
       <div>
-        <p class="text-sm uppercase tracking-wide text-[color:var(--text-secondary)]">Kitchen Appliances</p>
-        <h2 class="mt-2 text-xl font-semibold">Manage smart ovens, kettles & more</h2>
-        <p class="mt-2 text-sm text-[color:var(--text-secondary)]">Specialized forms, schematics, and MQTT control tailored for each appliance.</p>
+        <p class="text-sm uppercase tracking-wide text-[color:var(--text-secondary)]">{% trans "Kitchen Appliances" %}</p>
+        <h2 class="mt-2 text-xl font-semibold">{% trans "Manage smart ovens, kettles & more" %}</h2>
+        <p class="mt-2 text-sm text-[color:var(--text-secondary)]">{% trans "Specialized forms, schematics, and MQTT control tailored for each appliance." %}</p>
       </div>
       <span class="mt-4 inline-flex items-center gap-2 text-sm text-[color:var(--accent-primary)] group-hover:translate-x-1 transition">
-        Open studio
+        {% trans "Open studio" %}
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
       </span>
     </a>
@@ -43,13 +44,13 @@
     <table class="min-w-full bg-[color:var(--surface)] text-sm">
       <thead class="text-left text-[color:var(--text-secondary)] border-b border-[color:var(--border)]">
         <tr>
-          <th class="px-4 py-3">Name</th>
-          <th class="px-4 py-3">Type</th>
-          <th class="px-4 py-3">Topic</th>
-          <th class="px-4 py-3">Power</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3">Created</th>
-          <th class="px-4 py-3 text-right">Actions</th>
+          <th class="px-4 py-3">{% trans "Name" %}</th>
+          <th class="px-4 py-3">{% trans "Type" %}</th>
+          <th class="px-4 py-3">{% trans "Topic" %}</th>
+          <th class="px-4 py-3">{% trans "Power" %}</th>
+          <th class="px-4 py-3">{% trans "Status" %}</th>
+          <th class="px-4 py-3">{% trans "Created" %}</th>
+          <th class="px-4 py-3 text-right">{% trans "Actions" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -64,19 +65,19 @@
               <div class="font-mono text-xs">
                 {{ d.current_power_watts|default_if_none:0|floatformat:1 }} W
               </div>
-              <div class="text-[color:var(--text-secondary)] text-xs">capacity {{ d.power_rating_watts }} W</div>
+              <div class="text-[color:var(--text-secondary)] text-xs">{% blocktrans with power=d.power_rating_watts %}capacity {{ power }} W{% endblocktrans %}</div>
             </td>
             <td class="px-4 py-3">
               {% if d.status %}
-                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-success)] mr-2"></span>On
+                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-success)] mr-2"></span>{% trans "On" %}
               {% else %}
-                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-error)] mr-2"></span>Off
+                <span class="w-2 h-2 inline-block rounded-full bg-[color:var(--accent-error)] mr-2"></span>{% trans "Off" %}
               {% endif %}
             </td>
             <td class="px-4 py-3">{{ d.created_at|date:"Y-m-d H:i" }}</td>
             <td class="px-4 py-3">
               <div class="flex justify-end">
-                <details class="relative">
+                <details class="relative" data-dropdown>
                   <summary class="list-none cursor-pointer rounded-md p-2 hover:bg-[color:var(--bg-base)]">
                     <!-- vertical dots -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
@@ -86,28 +87,28 @@
                     </svg>
                   </summary>
                   <ul class="absolute right-0 mt-2 w-44 rounded-xl border border-[color:var(--border)]
-                             bg-[color:var(--surface)] shadow-lg z-10">
+                             bg-[color:var(--surface)] shadow-lg z-10 dropdown-menu">
                     <li>
                       <a href="{% url 'devices:detail' d.pk %}"
-                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Open</a>
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">{% trans "Open" %}</a>
                     </li>
                     {% if request.user.userprofile.role in "admin operator" %}
                     {% if d.device_type in appliance_types %}
                     <li class="border-t border-[color:var(--border)]">
                       <a href="{% url 'devices:control' d.pk %}"
-                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Control</a>
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">{% trans "Control" %}</a>
                     </li>
                     {% endif %}
                     <li class="border-t border-[color:var(--border)]">
                       <a href="{% url 'devices:edit' d.pk %}"
-                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">Edit</a>
+                         class="block px-4 py-2 hover:bg-[color:var(--bg-base)]">{% trans "Edit" %}</a>
                     </li>
                     <li class="border-t border-[color:var(--border)]">
-                      <form method="post" action="{% url 'devices:delete' d.pk %}" data-confirm="Delete {{ d.name }}?">
+                      <form method="post" action="{% url 'devices:delete' d.pk %}" data-confirm="{% blocktrans with name=d.name %}Delete {{ name }}?{% endblocktrans %}">
                         {% csrf_token %}
                         <button type="submit"
-                                class="w-full text-left px-4 py-2 text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">
-                          Delete
+                                class="w-full text-left rtl:text-right px-4 py-2 text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">
+                          {% trans "Delete" %}
                         </button>
                       </form>
                     </li>
@@ -118,7 +119,7 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="6" class="px-4 py-6 text-[color:var(--text-secondary)]">No devices.</td></tr>
+          <tr><td colspan="6" class="px-4 py-6 text-[color:var(--text-secondary)]">{% trans "No devices." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

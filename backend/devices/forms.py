@@ -3,6 +3,7 @@ from decimal import Decimal
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils.translation import gettext_lazy as _
 from .models import UserProfile
 from .models import Device
 from .appliances import (
@@ -48,17 +49,17 @@ class DeviceForm(forms.ModelForm):
             (value, label) for value, label in Device.DEVICE_TYPES if value not in disallowed
         ]
 
-        self.fields["name"].widget.attrs["placeholder"] = "Kitchen Temperature"
-        self.fields["topic"].widget.attrs["placeholder"] = "sensors/kitchen/temp"
-        self.fields["power_rating_watts"].widget.attrs["placeholder"] = "e.g. 1800"
-        self.fields["target_temperature"].widget.attrs["placeholder"] = "Optional target °C"
-        self.fields["mode"].widget.attrs["placeholder"] = "eco / normal / turbo"
+        self.fields["name"].widget.attrs["placeholder"] = _("Kitchen Temperature")
+        self.fields["topic"].widget.attrs["placeholder"] = _("sensors/kitchen/temp")
+        self.fields["power_rating_watts"].widget.attrs["placeholder"] = _("e.g. 1800")
+        self.fields["target_temperature"].widget.attrs["placeholder"] = _("Optional target °C")
+        self.fields["mode"].widget.attrs["placeholder"] = _("eco / normal / turbo")
         self.selected_type = self._resolve_device_type()
 
     def clean_device_type(self):
         value = self.cleaned_data["device_type"]
         if value in APPLIANCE_DEVICE_TYPES:
-            raise forms.ValidationError("Kitchen appliances must be created from the dedicated workflow.")
+            raise forms.ValidationError(_("Kitchen appliances must be created from the dedicated workflow."))
         return value
 
     def _resolve_device_type(self):
@@ -89,13 +90,13 @@ class SignUpForm(forms.ModelForm):
         )
 
         self.fields['username'].widget.attrs.update({
-            'class': base_classes, 'placeholder': 'Enter your username'
+            'class': base_classes, 'placeholder': _('Enter your username')
         })
         self.fields['email'].widget.attrs.update({
-            'class': base_classes, 'placeholder': 'Enter your email'
+            'class': base_classes, 'placeholder': _('Enter your email')
         })
         self.fields['password'].widget.attrs.update({
-            'class': base_classes, 'placeholder': 'Enter your password'
+            'class': base_classes, 'placeholder': _('Enter your password')
         })
         self.fields['role'].widget.attrs.update({'class': base_classes})
 
@@ -134,11 +135,11 @@ class StyledAuthenticationForm(AuthenticationForm):
 
         self.fields['username'].widget.attrs.update({
             'class': base_classes,
-            'placeholder': 'Enter your username'
+            'placeholder': _('Enter your username')
         })
         self.fields['password'].widget.attrs.update({
             'class': base_classes,
-            'placeholder': 'Enter your password'
+            'placeholder': _('Enter your password')
         })
 
 
@@ -165,8 +166,8 @@ class KitchenApplianceForm(forms.ModelForm):
         ]
         current_classes = self.fields["device_type"].widget.attrs.get("class", "")
         self.fields["device_type"].widget.attrs["class"] = (current_classes + " capitalize").strip()
-        self.fields["topic"].widget.attrs.setdefault("placeholder", "kitchen/device/topic")
-        self.fields["mode"].widget.attrs.setdefault("placeholder", "eco")
+        self.fields["topic"].widget.attrs.setdefault("placeholder", _("kitchen/device/topic"))
+        self.fields["mode"].widget.attrs.setdefault("placeholder", _("eco"))
 
         self.appliance_field_names = []
         self.appliance_field_configs = []

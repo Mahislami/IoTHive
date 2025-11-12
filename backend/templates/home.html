@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% load static %}
-{% block title %}IoTHive | Energy Command Center{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "IoTHive | Energy Command Center" %}{% endblock %}
 {% block content %}
 <div class="flex flex-col justify-center gap-8 py-6">
   <section class="grid gap-6 lg:grid-cols-[1fr,0.8fr] items-center">
     <div class="space-y-4">
       <span class="inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-1 text-[10px] uppercase tracking-wide text-[color:var(--text-secondary)]">
-        IoTHive · Unified MQTT Lab
+        {% trans "IoTHive · Unified MQTT Lab" %}
       </span>
       <h1 class="text-3xl md:text-4xl font-bold leading-tight">
-        A full-stack MQTT lab for simulating and supervising modern IoT fleets.
+        {% blocktrans %}A full-stack MQTT lab for simulating and supervising modern IoT fleets.{% endblocktrans %}
       </h1>
       <p class="text-base text-[color:var(--text-secondary)]">
-        Mosquitto handles live topics, Telegraf streams into InfluxDB, Grafana renders power/timer telemetry, and the control panel pushes commands back over MQTT in real time—no physical hardware required.
+        {% blocktrans %}Mosquitto handles live topics, Telegraf streams into InfluxDB, Grafana renders power/timer telemetry, and the control panel pushes commands back over MQTT in real time—no physical hardware required.{% endblocktrans %}
       </p>
       <div class="flex flex-wrap items-center gap-3">
         <a href="{{ primary_cta_url }}"
@@ -22,38 +22,38 @@
         {% if is_authenticated %}
           <a href="{{ secondary_cta_url }}"
              class="px-6 py-3 rounded-xl border border-[color:var(--border)] hover:border-[color:var(--accent-primary)] transition">
-            Manage Kitchen Appliances
+            {% trans "Manage Kitchen Appliances" %}
           </a>
         {% else %}
           <a href="{% url 'login' %}?next={% url 'dashboard' %}"
              class="px-6 py-3 rounded-xl border border-[color:var(--border)] hover:border-[color:var(--accent-primary)] transition">
-            Operator Login
+            {% trans "Operator Login" %}
           </a>
         {% endif %}
       </div>
       <p class="text-xs text-[color:var(--text-secondary)]">
-        Accounts are provisioned by administrators; ask your team lead for access.
+        {% blocktrans %}Accounts are provisioned by administrators; ask your team lead for access.{% endblocktrans %}
       </p>
     </div>
     <div class="relative mx-auto max-w-md rounded-3xl overflow-hidden shadow-lg">
       <img src="{% static 'images/homeImage.jpg' %}"
-           alt="Smart home schematic hovering above a hand with IoT icons around it"
+           alt="{% trans 'Smart home schematic hovering above a hand with IoT icons around it' %}"
            class="w-full h-auto object-cover">
     </div>
   </section>
 
   <section class="grid gap-3 md:grid-cols-3 text-sm text-[color:var(--text-secondary)]">
     <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Full appliance roster</h3>
-      <p>Kitchen gear, thermostats, switches, TVs, and sensors all emit <code>iot/#</code> payloads with cycle progress, mode, timers, and power draw.</p>
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">{% trans "Full appliance roster" %}</h3>
+      <p>{% blocktrans %}Kitchen gear, thermostats, switches, TVs, and sensors all emit <code>iot/#</code> payloads with cycle progress, mode, timers, and power draw.{% endblocktrans %}</p>
     </article>
     <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Real-time analytics</h3>
-      <p>Telegraf + InfluxDB keep Grafana boards current, enabling anomaly detection and ML training on the exact stream operators manipulate.</p>
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">{% trans "Real-time analytics" %}</h3>
+      <p>{% blocktrans %}Telegraf + InfluxDB keep Grafana boards current, enabling anomaly detection and ML training on the exact stream operators manipulate.{% endblocktrans %}</p>
     </article>
     <article class="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">Operator guardrails</h3>
-      <p>Role-based controls let staff toggle appliances, schedule timers, and push commands back over MQTT while admins seed inventory and tune alarms.</p>
+      <h3 class="text-sm font-semibold mb-1 text-[color:var(--text-primary)]">{% trans "Operator guardrails" %}</h3>
+      <p>{% blocktrans %}Role-based controls let staff toggle appliances, schedule timers, and push commands back over MQTT while admins seed inventory and tune alarms.{% endblocktrans %}</p>
     </article>
   </section>
 </div>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% block title %}{{ device.name }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-6 py-10">
@@ -15,37 +16,37 @@
 
     <div class="mt-6 grid sm:grid-cols-2 gap-4 text-sm">
       <div class="p-4 rounded-xl border border-[color:var(--border)]">
-        <div class="text-[color:var(--text-secondary)]">Status</div>
+        <div class="text-[color:var(--text-secondary)]">{% trans "Status" %}</div>
         <div class="mt-1 flex items-center gap-2">
           {% if device.status %}
-            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-success)]"></span> On
+            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-success)]"></span> {% trans "On" %}
           {% else %}
-            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-error)]"></span> Off
+            <span class="w-2 h-2 rounded-full bg-[color:var(--accent-error)]"></span> {% trans "Off" %}
           {% endif %}
         </div>
       </div>
       <div class="p-4 rounded-xl border border-[color:var(--border)]">
-        <div class="text-[color:var(--text-secondary)]">Created</div>
+        <div class="text-[color:var(--text-secondary)]">{% trans "Created" %}</div>
         <div class="mt-1">{{ device.created_at|date:"Y-m-d H:i" }}</div>
       </div>
       <div class="p-4 rounded-xl border border-[color:var(--border)]">
-        <div class="text-[color:var(--text-secondary)]">Power Draw</div>
+        <div class="text-[color:var(--text-secondary)]">{% trans "Power Draw" %}</div>
         <div class="mt-1 text-lg font-mono">{{ current_power|floatformat:1 }} W</div>
-        <div class="text-xs text-[color:var(--text-secondary)]">Capacity {{ power_capacity }} W</div>
+        <div class="text-xs text-[color:var(--text-secondary)]">{% blocktrans with capacity=power_capacity %}Capacity {{ capacity }} W{% endblocktrans %}</div>
       </div>
       {% if device.current_temperature %}
       <div class="p-4 rounded-xl border border-[color:var(--border)]">
-        <div class="text-[color:var(--text-secondary)]">Temperature</div>
+        <div class="text-[color:var(--text-secondary)]">{% trans "Temperature" %}</div>
         <div class="mt-1">{{ device.current_temperature }}°C
           {% if device.target_temperature %}
-            <span class="text-xs text-[color:var(--text-secondary)]">(target {{ device.target_temperature }}°C)</span>
+            <span class="text-xs text-[color:var(--text-secondary)]">{% blocktrans with target=device.target_temperature %}(target {{ target }}°C){% endblocktrans %}</span>
           {% endif %}
         </div>
       </div>
       {% endif %}
       {% if cycle_progress %}
       <div class="p-4 rounded-xl border border-[color:var(--border)] col-span-full">
-        <div class="text-[color:var(--text-secondary)] mb-2">Cycle Progress</div>
+        <div class="text-[color:var(--text-secondary)] mb-2">{% trans "Cycle Progress" %}</div>
         <div class="flex items-center gap-2">
           <div class="flex-1 h-2 bg-[color:var(--bg-base)] rounded-full overflow-hidden">
             <div class="h-full bg-[color:var(--accent-primary)]" style="width: {{ cycle_progress }}%"></div>
@@ -57,7 +58,7 @@
     </div>
 
     <div class="mt-6">
-      <div class="text-[color:var(--text-secondary)] mb-2 text-sm">Metadata</div>
+      <div class="text-[color:var(--text-secondary)] mb-2 text-sm">{% trans "Metadata" %}</div>
       <pre class="text-sm bg-[color:var(--bg-base)] border border-[color:var(--border)] rounded-xl p-4 overflow-x-auto">{{ metadata_pretty }}</pre>
     </div>
 
@@ -65,13 +66,13 @@
     <div class="mt-6 flex items-center gap-3">
       {% if can_control %}
       <a href="{% url 'devices:control' device.pk %}"
-         class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400">Control</a>
+         class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400">{% trans "Control" %}</a>
       {% endif %}
       <a href="{% url 'devices:edit' device.pk %}"
-         class="px-4 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg hover:bg-indigo-700">Edit</a>
-      <form method="post" action="{% url 'devices:delete' device.pk %}" data-confirm="Delete {{ device.name }}?">
+         class="px-4 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg hover:bg-indigo-700">{% trans "Edit" %}</a>
+      <form method="post" action="{% url 'devices:delete' device.pk %}" data-confirm="{% blocktrans with name=device.name %}Delete {{ name }}?{% endblocktrans %}">
         {% csrf_token %}
-        <button class="px-4 py-2 border border-[color:var(--border)] rounded-lg text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">Delete</button>
+        <button class="px-4 py-2 border border-[color:var(--border)] rounded-lg text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">{% trans "Delete" %}</button>
       </form>
     </div>
     {% endif %}

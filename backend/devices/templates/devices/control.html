@@ -1,11 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Control {{ device.name }}{% endblock %}
+{% load i18n %}
+{% block title %}
+  {% blocktrans with device_name=device.name %}Control {{ device_name }}{% endblocktrans %}
+{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold">Control {{ device.name }}</h1>
+        <h1 class="text-2xl font-bold">
+          {% blocktrans with device_name=device.name %}Control {{ device_name }}{% endblocktrans %}
+        </h1>
         <p class="text-sm text-[color:var(--text-secondary)] font-mono">{{ device.topic }}</p>
       </div>
       <span class="px-3 py-1 text-xs border border-[color:var(--border)] rounded-full">
@@ -16,31 +21,33 @@
     <form method="post" class="space-y-6">
       {% csrf_token %}
       <div>
-        <label class="text-sm text-[color:var(--text-secondary)]">Power State</label>
+        <label class="text-sm text-[color:var(--text-secondary)]">{% trans "Power State" %}</label>
         <div class="mt-2 flex gap-4 text-sm">
           <label class="inline-flex items-center gap-2">
             <input type="radio" name="status" value="on" {% if status_on %}checked{% endif %}>
-            <span>On</span>
+            <span>{% trans "On" %}</span>
           </label>
           <label class="inline-flex items-center gap-2">
             <input type="radio" name="status" value="off" {% if not status_on %}checked{% endif %}>
-            <span>Off</span>
+            <span>{% trans "Off" %}</span>
           </label>
         </div>
       </div>
 
       {% if spec.temp_range %}
       <div>
-        <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">Target Temperature (°C)</label>
+        <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Target Temperature (°C)" %}</label>
         <input name="target_temperature" type="number" step="0.5" value="{{ device.target_temperature|default_if_none:'' }}"
                class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
-        <p class="text-xs text-[color:var(--text-secondary)] mt-1">Range {{ spec.temp_range.0 }} – {{ spec.temp_range.1 }} °C</p>
+        <p class="text-xs text-[color:var(--text-secondary)] mt-1">
+          {% blocktrans with min_temp=spec.temp_range.0 max_temp=spec.temp_range.1 %}Range {{ min_temp }} – {{ max_temp }} °C{% endblocktrans %}
+        </p>
       </div>
       {% endif %}
 
       {% if spec.modes %}
       <div>
-        <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">Mode</label>
+        <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Mode" %}</label>
         <select name="mode" class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
           {% for mode in spec.modes %}
             <option value="{{ mode }}" {% if device.mode == mode %}selected{% endif %}>{{ mode|title }}</option>
@@ -52,7 +59,7 @@
       {% if spec.cycles %}
       <div class="grid gap-3 sm:grid-cols-2">
         <div>
-          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">Cycle</label>
+          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Cycle" %}</label>
           <select name="cycle" class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
             {% for cycle in spec.cycles %}
               <option value="{{ cycle }}" {% if meta.cycle == cycle %}selected{% endif %}>{{ cycle|title }}</option>
@@ -60,7 +67,7 @@
           </select>
         </div>
         <div>
-          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">Progress</label>
+          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Progress" %}</label>
           <div class="flex items-center gap-2">
             <div class="flex-1 h-2 bg-[color:var(--bg-base)] rounded-full overflow-hidden">
               <div class="h-full bg-[color:var(--accent-primary)]" style="width: {{ meta.cycle_progress|default:0 }}%"></div>
@@ -68,7 +75,7 @@
             <span class="text-sm">{{ meta.cycle_progress|default:0 }}%</span>
           </div>
           <label class="mt-2 inline-flex items-center gap-2 text-xs">
-            <input type="checkbox" name="reset_cycle" /> Reset progress
+            <input type="checkbox" name="reset_cycle" /> {% trans "Reset progress" %}
           </label>
         </div>
       </div>
@@ -77,7 +84,7 @@
       {% if timer_supported %}
       <div class="border border-[color:var(--border)] rounded-xl p-4 space-y-3">
         <div>
-          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">Timer Duration (minutes)</label>
+          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Timer Duration (minutes)" %}</label>
           <input name="timer_minutes"
                  type="number"
                  min="1"
@@ -90,21 +97,21 @@
                   name="timer_action"
                   value="start"
                   class="px-3 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg">
-            Start Timer
+            {% trans "Start Timer" %}
           </button>
           {% if timer %}
           <button type="submit"
                   name="timer_action"
                   value="cancel"
                   class="px-3 py-2 border border-[color:var(--border)] rounded-lg">
-            Cancel Timer
+            {% trans "Cancel Timer" %}
           </button>
           {% endif %}
         </div>
         {% if timer %}
         <div class="text-sm space-y-1">
-          <p>Status: <span class="font-mono capitalize">{{ timer.status }}</span></p>
-          <p>Remaining: <span class="font-mono">{{ timer.remaining_label|default:"--:--" }}</span></p>
+          <p>{% trans "Status" %}: <span class="font-mono capitalize">{{ timer.status }}</span></p>
+          <p>{% trans "Remaining" %}: <span class="font-mono">{{ timer.remaining_label|default:"--:--" }}</span></p>
           <div class="flex items-center gap-2 mt-1">
             <div class="flex-1 h-2 bg-[color:var(--bg-base)] rounded-full overflow-hidden">
               <div class="h-full bg-[color:var(--accent-primary)]" style="width: {{ timer.progress_percent|default:0 }}%"></div>
@@ -113,15 +120,15 @@
           </div>
         </div>
         {% else %}
-        <p class="text-xs text-[color:var(--text-secondary)]">No active timer for this appliance.</p>
+        <p class="text-xs text-[color:var(--text-secondary)]">{% trans "No active timer for this appliance." %}</p>
         {% endif %}
       </div>
       {% endif %}
 
       <div class="pt-4 border-t border-[color:var(--border)] flex items-center gap-3">
-        <button type="submit" class="px-4 py-2 bg-[color:var(--accent-primary)] rounded-lg text-white">Publish Controls</button>
-        <a href="{% url 'devices:detail' device.pk %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Back</a>
-        <a href="{% url 'home' %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">Home</a>
+        <button type="submit" class="px-4 py-2 bg-[color:var(--accent-primary)] rounded-lg text-white">{% trans "Publish Controls" %}</button>
+        <a href="{% url 'devices:detail' device.pk %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Back" %}</a>
+        <a href="{% url 'home' %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Home" %}</a>
       </div>
     </form>
   </div>

@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST, require_GET
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from rest_framework import generics
@@ -391,7 +392,10 @@ def signup_view(request):
             user = form.save()
             messages.success(
                 request,
-                f"Created account {user.username} with role {user.userprofile.role}.",
+                _("Created account %(username)s with role %(role)s.") % {
+                    "username": user.username,
+                    "role": user.userprofile.role,
+                },
             )
             return redirect('users:list')
     else:
@@ -405,6 +409,7 @@ def dashboard_view(request):
     role = getattr(getattr(user, 'userprofile', None), 'role', 'visitor')
     grafana_base = _grafana_base_url(request)
     grafana_login_url = urljoin(grafana_base, "login")
+    grafana_dashboards_url = urljoin(grafana_base, "dashboards")
     grafana_power_url = urljoin(
         grafana_base,
         "d/e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5/energy-command-center?orgId=1",
@@ -414,66 +419,68 @@ def dashboard_view(request):
     menu = [
         {
             "key": "grafana",
-            "label": "Grafana Dashboard",
-            "href": grafana_login_url,
-            "desc": "View metrics and charts",
+            "label": _("Grafana Dashboard"),
+            "href": grafana_dashboards_url,
+            "desc": _("View metrics and charts"),
             "icon": "activity",
+            "requires_grafana_login": True,
         },
         {
             "key": "power_grafana",
-            "label": "Power Usage",
+            "label": _("Power Usage"),
             "href": grafana_power_url,
-            "desc": "Track appliance energy consumption",
+            "desc": _("Track appliance energy consumption"),
             "icon": "zap",
+            "requires_grafana_login": True,
         },
     ]
 
     if role in ("admin", "operator"):
         menu.insert(0, {
             "key": "devices",
-            "label": "Manage Devices",
-            "href": reverse("devices:list"),  # e.g. /devices/
-            "desc": "Add, remove, or edit devices",
+            "label": _("Manage Devices"),
+            "href": reverse("devices:list"),
+            "desc": _("Add, remove, or edit devices"),
             "icon": "cpu",
         })
-        menu.insert(1, {  # 👈 NEW: New Device card
+        menu.insert(1, {
             "key": "device_new",
-            "label": "New Device",
+            "label": _("New Device"),
             "href": reverse("devices:create"),
-            "desc": "Create a new device",
+            "desc": _("Create a new device"),
         })
         menu.insert(2, {
             "key": "kitchen",
-            "label": "Kitchen Appliances",
+            "label": _("Kitchen Appliances"),
             "href": reverse("devices:kitchen_list"),
-            "desc": "Dedicated controls for ovens, kettles, etc.",
+            "desc": _("Dedicated controls for ovens, kettles, etc."),
             "icon": "chef-hat",
         })
         menu.append({
-        "key": "alarm_rules",
-        "label": "Alarm Rules",
-        "href": reverse("devices:alarm_rules"),
-        "desc": "Set thresholds / states per device",
+            "key": "alarm_rules",
+            "label": _("Alarm Rules"),
+            "href": reverse("devices:alarm_rules"),
+            "desc": _("Set thresholds / states per device"),
         })
         menu.append({
-        "key": "active_alarms",
-        "label": "Active Alarms",
-        "href": reverse("devices:active_alarms"),
-        "desc": "See and manage raised alarms",
+            "key": "active_alarms",
+            "label": _("Active Alarms"),
+            "href": reverse("devices:active_alarms"),
+            "desc": _("See and manage raised alarms"),
         })
 
     if role == "admin":
         menu.append({
             "key": "users",
-            "label": "Manage Users",
+            "label": _("Manage Users"),
             "href": reverse("users:list"),
-            "desc": "Create, disable, or edit users",
+            "desc": _("Create, disable, or edit users"),
         })
-        menu.append({     # 👈 NEW: New User card
+        menu.append({
             "key": "user_new",
-            "label": "New User",
+            "label": _("New User"),
             "href": reverse("users:create"),
-            "desc": "Create a new user",
+            "desc": _("Create a new user"),
         })
 
     context = {

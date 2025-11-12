@@ -1,29 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Edit User{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Edit User" %}{% endblock %}
 {% block content %}
 <div class="max-w-xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
-    <h1 class="text-2xl font-bold mb-6">Edit {{ u.username }}</h1>
+    <h1 class="text-2xl font-bold mb-6">{% blocktrans with username=u.username %}Edit {{ username }}{% endblocktrans %}</h1>
 
     <form method="post" class="space-y-4">
       {% csrf_token %}
       <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Username</label>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Username" %}</label>
         {{ form.username }}
         {% if form.username.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.username.errors.0 }}</p>{% endif %}
       </div>
       <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Email</label>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Email" %}</label>
         {{ form.email }}
         {% if form.email.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.email.errors.0 }}</p>{% endif %}
       </div>
       <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Active</label>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Active" %}</label>
         {{ form.is_active }}
         {% if form.is_active.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.is_active.errors.0 }}</p>{% endif %}
       </div>
       <div>
-        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">Role</label>
+        <label class="block text-sm text-[color:var(--text-secondary)] mb-1">{% trans "Role" %}</label>
         {{ form.role }}
         {% if form.role.errors %}<p class="text-[color:var(--accent-error)] text-sm">{{ form.role.errors.0 }}</p>{% endif %}
       </div>
@@ -31,14 +32,14 @@
       <div class="mt-6 flex items-center gap-3">
         <button type="submit"
                 class="px-4 py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
-          Save changes
+          {% trans "Save changes" %}
         </button>
 
-        <form method="post" action="{% url 'users:delete' u.pk %}" data-confirm="Delete {{ u.username }}?">
+        <form method="post" action="{% url 'users:delete' u.pk %}" data-confirm="{% blocktrans with username=u.username %}Delete {{ username }}?{% endblocktrans %}">
           {% csrf_token %}
           <button type="submit"
                   class="px-4 py-2 border border-[color:var(--border)] rounded-lg text-[color:var(--accent-error)] hover:bg-[color:var(--bg-base)]">
-            Delete user
+            {% trans "Delete user" %}
           </button>
         </form>
       </div>

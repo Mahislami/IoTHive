@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% load extras %}
-{% block title %}Alarm Rules{% endblock %}
+{% load extras i18n %}
+{% block title %}{% trans "Alarm Rules" %}{% endblock %}
 {% block extra_head %}
 <style>
   .tab-btn{border-color:var(--border);color:var(--text-secondary);}
@@ -13,25 +13,25 @@
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-6 animate-fade-in">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold mb-1">Alarm Rules</h2>
-        <p class="text-[color:var(--text-secondary)]">Configure thresholds by device type.</p>
+        <h2 class="text-2xl font-bold mb-1">{% trans "Alarm Rules" %}</h2>
+        <p class="text-[color:var(--text-secondary)]">{% trans "Configure thresholds by device type." %}</p>
       </div>
       <a href="{% url 'devices:active_alarms' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">
-        View Active Alarms
+        {% trans "View Active Alarms" %}
       </a>
     </div>
     <div class="mt-4 flex gap-2">
-      <button id="tab-numeric" class="tab-btn px-3 py-1 rounded-lg border">Numeric (Sensors, Thermostats)</button>
-      <button id="tab-binary" class="tab-btn px-3 py-1 rounded-lg border">Binary (Switches, Lights, Actuators)</button>
-      <button id="tab-appliances" class="tab-btn px-3 py-1 rounded-lg border">Kitchen Appliances</button>
+      <button id="tab-numeric" class="tab-btn px-3 py-1 rounded-lg border">{% trans "Numeric (Sensors, Thermostats)" %}</button>
+      <button id="tab-binary" class="tab-btn px-3 py-1 rounded-lg border">{% trans "Binary (Switches, Lights, Actuators)" %}</button>
+      <button id="tab-appliances" class="tab-btn px-3 py-1 rounded-lg border">{% trans "Kitchen Appliances" %}</button>
     </div>
   </div>
 
   <section id="panel-numeric" class="animate-fade-in space-y-6">
     <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6" open>
       <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
-        Sensors
-        <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        {% trans "Sensors" %}
+        <span class="text-sm text-[color:var(--text-secondary)]">{% trans "Click to expand/collapse" %}</span>
       </summary>
       <div class="grid gap-6 md:grid-cols-2">
         {% for d in devices %}
@@ -45,45 +45,45 @@
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>
                 <div class="flex gap-3">
                   <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Min
+                    {% trans "Min" %}
                     <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                   </label>
                   <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Max
+                    {% trans "Max" %}
                     <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                   </label>
                 </div>
                 <div class="flex items-center gap-3">
                   <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
-                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
-                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>{% trans "Info" %}</option>
+                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>{% trans "Warning" %}</option>
+                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>{% trans "Critical" %}</option>
                   </select>
                   <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> {% trans "Active" %}
                   </label>
                 </div>
-                <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                <input name="note" placeholder="{% trans 'Note (optional)' %}" value="{{ r.note|default:'' }}"
                        class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
                 <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
-                  Save
+                  {% trans "Save" %}
                 </button>
               </form>
             </div>
             {% endwith %}
           {% endif %}
         {% empty %}
-          <p class="text-[color:var(--text-secondary)]">No sensors found.</p>
+          <p class="text-[color:var(--text-secondary)]">{% trans "No sensors found." %}</p>
         {% endfor %}
       </div>
     </details>
 
     <details class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
       <summary class="text-lg font-semibold capitalize mb-4 flex items-center justify-between">
-        Thermostats
-        <span class="text-sm text-[color:var(--text-secondary)]">Click to expand/collapse</span>
+        {% trans "Thermostats" %}
+        <span class="text-sm text-[color:var(--text-secondary)]">{% trans "Click to expand/collapse" %}</span>
       </summary>
       <div class="grid gap-6 md:grid-cols-2">
         {% for d in devices %}
@@ -97,37 +97,37 @@
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>
                 <div class="flex gap-3">
                   <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Min
+                    {% trans "Min" %}
                     <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                   </label>
                   <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                    Max
+                    {% trans "Max" %}
                     <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
                            class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                   </label>
                 </div>
                 <div class="flex items-center gap-3">
                   <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
-                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
-                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>{% trans "Info" %}</option>
+                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>{% trans "Warning" %}</option>
+                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>{% trans "Critical" %}</option>
                   </select>
                   <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> {% trans "Active" %}
                   </label>
                 </div>
-                <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                <input name="note" placeholder="{% trans 'Note (optional)' %}" value="{{ r.note|default:'' }}"
                        class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
                 <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
-                  Save
+                  {% trans "Save" %}
                 </button>
               </form>
             </div>
             {% endwith %}
           {% endif %}
         {% empty %}
-          <p class="text-[color:var(--text-secondary)]">No thermostats found.</p>
+          <p class="text-[color:var(--text-secondary)]">{% trans "No thermostats found." %}</p>
         {% endfor %}
       </div>
     </details>
@@ -135,7 +135,7 @@
 
   <section id="panel-binary" class="hidden animate-fade-in space-y-6">
     <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
-      <h3 class="text-lg font-semibold mb-4">Binary Devices</h3>
+      <h3 class="text-lg font-semibold mb-4">{% trans "Binary Devices" %}</h3>
       <div class="grid gap-6 md:grid-cols-2">
         {% for d in devices %}
           {% if d.device_type in "switch light actuator" %}
@@ -147,34 +147,34 @@
                 {% csrf_token %}
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>
                 <label class="text-sm text-[color:var(--text-secondary)] flex items-center gap-2">
-                  Expected state
+                  {% trans "Expected state" %}
                   <select name="expected_state" class="flex-1 px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                    <option value="">Any</option>
-                    <option value="on" {% if r and r.expected_state %}selected{% endif %}>On</option>
-                    <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>Off</option>
+                    <option value="">{% trans "Any" %}</option>
+                    <option value="on" {% if r and r.expected_state %}selected{% endif %}>{% trans "On" %}</option>
+                    <option value="off" {% if r and r.expected_state is not None and not r.expected_state %}selected{% endif %}>{% trans "Off" %}</option>
                   </select>
                 </label>
                 <div class="flex items-center gap-3">
                   <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
-                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
-                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                    <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>{% trans "Info" %}</option>
+                    <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>{% trans "Warning" %}</option>
+                    <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>{% trans "Critical" %}</option>
                   </select>
                   <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                    <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> {% trans "Active" %}
                   </label>
                 </div>
-                <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+                <input name="note" placeholder="{% trans 'Note (optional)' %}" value="{{ r.note|default:'' }}"
                        class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
                 <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
-                  Save
+                  {% trans "Save" %}
                 </button>
               </form>
             </div>
             {% endwith %}
           {% endif %}
         {% empty %}
-          <p class="text-[color:var(--text-secondary)]">No binary devices found.</p>
+          <p class="text-[color:var(--text-secondary)]">{% trans "No binary devices found." %}</p>
         {% endfor %}
       </div>
     </div>
@@ -183,7 +183,7 @@
   <section id="panel-appliances" class="hidden animate-fade-in space-y-6">
     {% if kitchen_devices %}
     <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
-      <h3 class="text-lg font-semibold mb-4">Appliance Power / Temperature Thresholds</h3>
+      <h3 class="text-lg font-semibold mb-4">{% trans "Appliance Power / Temperature Thresholds" %}</h3>
       <div class="grid gap-6 md:grid-cols-2">
         {% for d in kitchen_devices %}
           {% with rules_map|get_item:d.id as r %}
@@ -195,30 +195,30 @@
               <input type="hidden" name="device_id" value="{{ d.id }}"/>
               <div class="flex gap-3">
                 <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                  Min (°C/W)
+                  {% trans "Min (°C/W)" %}
                   <input name="min_value" type="number" step="any" value="{{ r.min_value|default_if_none:'' }}"
                          class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                 </label>
                 <label class="text-sm text-[color:var(--text-secondary)] w-1/2">
-                  Max (°C/W)
+                  {% trans "Max (°C/W)" %}
                   <input name="max_value" type="number" step="any" value="{{ r.max_value|default_if_none:'' }}"
                          class="mt-1 w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)]"/>
                 </label>
               </div>
               <div class="flex items-center gap-3">
                 <select name="severity" class="px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm">
-                  <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>Info</option>
-                  <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>Warning</option>
-                  <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>Critical</option>
+                  <option value="info" {% if r and r.severity == 'info' %}selected{% endif %}>{% trans "Info" %}</option>
+                  <option value="warn" {% if not r or r.severity == 'warn' %}selected{% endif %}>{% trans "Warning" %}</option>
+                  <option value="crit" {% if r and r.severity == 'crit' %}selected{% endif %}>{% trans "Critical" %}</option>
                 </select>
                 <label class="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
-                  <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> Active
+                  <input type="checkbox" name="active" {% if not r or r.active %}checked{% endif %}/> {% trans "Active" %}
                 </label>
               </div>
-              <input name="note" placeholder="Note (optional)" value="{{ r.note|default:'' }}"
+              <input name="note" placeholder="{% trans 'Note (optional)' %}" value="{{ r.note|default:'' }}"
                      class="w-full px-2 py-1 rounded-md bg-[color:var(--bg-base)] border border-[color:var(--border)] text-sm"/>
               <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 text-sm">
-                Save
+                {% trans "Save" %}
               </button>
             </form>
           </div>
@@ -227,7 +227,7 @@
       </div>
     </div>
     {% else %}
-      <p class="text-[color:var(--text-secondary)]">No kitchen appliances available.</p>
+      <p class="text-[color:var(--text-secondary)]">{% trans "No kitchen appliances available." %}</p>
     {% endif %}
   </section>
 
