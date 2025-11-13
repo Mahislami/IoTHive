@@ -7,9 +7,12 @@ from typing import Optional, Tuple
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from .appliances import APPLIANCE_SPECS
 
-# Appliances that support kitchen timer workflows.
-TIMER_DEVICE_TYPES = {"kettle", "dishwasher", "washing_machine", "dryer"}
+
+# All managed appliances support timers; some expose it as optional UX.
+TIMER_DEVICE_TYPES = set(APPLIANCE_SPECS.keys())
+OPTIONAL_TIMER_DEVICE_TYPES = {"tv", "gas"}
 
 
 @dataclass
@@ -36,6 +39,10 @@ class TimerState:
 
 def supports_timer(device_type: str) -> bool:
     return device_type in TIMER_DEVICE_TYPES
+
+
+def timer_optional(device_type: str) -> bool:
+    return device_type in OPTIONAL_TIMER_DEVICE_TYPES
 
 
 def start_timer(duration_minutes: int, now=None) -> dict:

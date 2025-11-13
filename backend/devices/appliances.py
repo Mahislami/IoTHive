@@ -1,3 +1,6 @@
+from django.utils.translation import gettext_lazy as _
+
+
 APPLIANCE_SPECS = {
     "dishwasher": {
         "power_rating": 1800,
@@ -89,44 +92,44 @@ def get_appliance_spec(device_type):
 
 APPLIANCE_FORM_FIELDS = {
     "dishwasher": [
-        {"name": "rack_count", "label": "Rack Count", "type": "int", "min": 1, "max": 3, "help": "Number of racks inside the washer."},
-        {"name": "water_usage_l", "label": "Water Usage (L)", "type": "float", "min": 5, "max": 30, "step": 0.1, "help": "Estimated liters per cycle."},
-        {"name": "sanitize_enabled", "label": "Sanitize Mode", "type": "bool", "help": "Supports high-temp sanitize."},
+        {"name": "rack_count", "label": _("Rack Count"), "type": "int", "min": 1, "max": 3, "help": _("Number of racks inside the washer.")},
+        {"name": "water_usage_l", "label": _("Water Usage (L)"), "type": "float", "min": 5, "max": 30, "step": 0.1, "help": _("Estimated liters per cycle.")},
+        {"name": "sanitize_enabled", "label": _("Sanitize Mode"), "type": "bool", "help": _("Supports high-temp sanitize.")},
     ],
     "washing_machine": [
-        {"name": "drum_capacity_kg", "label": "Drum Capacity (kg)", "type": "float", "min": 3, "max": 15, "step": 0.5},
-        {"name": "spin_speed_rpm", "label": "Spin Speed (RPM)", "type": "int", "min": 400, "max": 1600, "help": "Maximum spin cycle speed."},
+        {"name": "drum_capacity_kg", "label": _("Drum Capacity (kg)"), "type": "float", "min": 3, "max": 15, "step": 0.5},
+        {"name": "spin_speed_rpm", "label": _("Spin Speed (RPM)"), "type": "int", "min": 400, "max": 1600, "help": _("Maximum spin cycle speed.")},
     ],
     "dryer": [
-        {"name": "drum_capacity_kg", "label": "Drum Capacity (kg)", "type": "float", "min": 3, "max": 12, "step": 0.5},
-        {"name": "has_heat_pump", "label": "Heat Pump", "type": "bool", "help": "Indicates if unit uses heat pump tech."},
+        {"name": "drum_capacity_kg", "label": _("Drum Capacity (kg)"), "type": "float", "min": 3, "max": 12, "step": 0.5},
+        {"name": "has_heat_pump", "label": _("Heat Pump"), "type": "bool", "help": _("Indicates if unit uses heat pump tech.")},
     ],
     "oven": [
-        {"name": "max_temperature_c", "label": "Max Temperature (°C)", "type": "int", "min": 150, "max": 320},
-        {"name": "shelf_levels", "label": "Shelf Levels", "type": "int", "min": 1, "max": 5},
-        {"name": "has_convection", "label": "Convection Fan", "type": "bool"},
+        {"name": "max_temperature_c", "label": _("Max Temperature (°C)"), "type": "int", "min": 150, "max": 320},
+        {"name": "shelf_levels", "label": _("Shelf Levels"), "type": "int", "min": 1, "max": 5},
+        {"name": "has_convection", "label": _("Convection Fan"), "type": "bool"},
     ],
     "microwave": [
-        {"name": "magnetron_watts", "label": "Magnetron Watts", "type": "int", "min": 600, "max": 1800},
-        {"name": "sensor_cook", "label": "Sensor Cook", "type": "bool"},
+        {"name": "magnetron_watts", "label": _("Magnetron Watts"), "type": "int", "min": 600, "max": 1800},
+        {"name": "sensor_cook", "label": _("Sensor Cook"), "type": "bool"},
     ],
     "kettle": [
-        {"name": "capacity_liters", "label": "Capacity (L)", "type": "float", "min": 0.3, "max": 3.0, "step": 0.1},
-        {"name": "keep_warm_minutes", "label": "Keep Warm (min)", "type": "int", "min": 0, "max": 60},
+        {"name": "capacity_liters", "label": _("Capacity (L)"), "type": "float", "min": 0.3, "max": 3.0, "step": 0.1},
+        {"name": "keep_warm_minutes", "label": _("Keep Warm (min)"), "type": "int", "min": 0, "max": 60},
     ],
     "gas": [
-        {"name": "burner_count", "label": "Burner Count", "type": "int", "min": 1, "max": 6},
-        {"name": "fuel_type", "label": "Fuel Type", "type": "choice", "choices": ["natural_gas", "propane"], "help": "Primary fuel source."},
+        {"name": "burner_count", "label": _("Burner Count"), "type": "int", "min": 1, "max": 6},
+        {"name": "fuel_type", "label": _("Fuel Type"), "type": "choice", "choices": ["natural_gas", "propane"], "help": _("Primary fuel source.")},
     ],
     "fridge": [
-        {"name": "volume_liters", "label": "Volume (L)", "type": "int", "min": 100, "max": 800},
-        {"name": "has_ice_maker", "label": "Ice Maker", "type": "bool"},
+        {"name": "volume_liters", "label": _("Volume (L)"), "type": "int", "min": 100, "max": 800},
+        {"name": "has_ice_maker", "label": _("Ice Maker"), "type": "bool"},
     ],
     "tv": [
-        {"name": "screen_size_in", "label": "Screen Size (inches)", "type": "int", "min": 24, "max": 120},
-        {"name": "default_volume", "label": "Default Volume", "type": "int", "min": 0, "max": 100},
-        {"name": "default_brightness", "label": "Default Brightness", "type": "int", "min": 0, "max": 100},
-        {"name": "input_source", "label": "Preferred Input", "type": "choice", "choices": ["hdmi1", "hdmi2", "hdmi3", "tv", "streaming_box"], "help": "Default input when the TV powers on."},
+        {"name": "screen_size_in", "label": _("Screen Size (inches)"), "type": "int", "min": 24, "max": 120},
+        {"name": "default_volume", "label": _("Default Volume"), "type": "int", "min": 0, "max": 100},
+        {"name": "default_brightness", "label": _("Default Brightness"), "type": "int", "min": 0, "max": 100},
+        {"name": "input_source", "label": _("Preferred Input"), "type": "choice", "choices": ["hdmi1", "hdmi2", "hdmi3", "tv", "streaming_box"], "help": _("Default input when the TV powers on.")},
     ],
 }
 

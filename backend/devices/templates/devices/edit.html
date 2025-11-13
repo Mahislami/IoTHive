@@ -52,10 +52,6 @@
 {% block content %}
 <div class="max-w-xl mx-auto px-6 py-10">
   <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6">
-    <div class="flex items-center justify-between text-sm mb-4">
-      <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Home" %}</a>
-      <a href="javascript:history.back()" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Back" %}</a>
-    </div>
     <h1 class="text-2xl font-bold mb-6">
       {% if object %}
         {% blocktrans with device_name=object.name %}Edit {{ device_name }}{% endblocktrans %}
@@ -130,10 +126,6 @@
                 class="px-4 py-2 bg-[color:var(--accent-primary)] text-white font-semibold rounded-lg hover:bg-indigo-700">
           {% trans "Save" %}
         </button>
-        <a href="javascript:history.back()"
-           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Back" %}</a>
-        <a href="{% url 'home' %}"
-           class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Home" %}</a>
       </div>
     </form>
   </div>

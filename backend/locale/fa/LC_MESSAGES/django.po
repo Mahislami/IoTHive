@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: IoTHive\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-12 22:29+0000\n"
+"POT-Creation-Date: 2025-11-13 23:13+0000\n"
 "PO-Revision-Date: 2025-11-12 21:57+0000\n"
 "Last-Translator: IoTHive Translator <noreply@example.com>\n"
 "Language-Team: Persian\n"
@@ -18,11 +18,121 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
 
+#: devices/appliances.py:95
+msgid "Rack Count"
+msgstr "تعداد سبدها"
+
+#: devices/appliances.py:95
+msgid "Number of racks inside the washer."
+msgstr "تعداد قفسه‌های داخل ماشین ظرف‌شویی."
+
+#: devices/appliances.py:96
+msgid "Water Usage (L)"
+msgstr "مصرف آب (لیتر)"
+
+#: devices/appliances.py:96
+msgid "Estimated liters per cycle."
+msgstr "لیتر مصرفی تخمینی در هر چرخه."
+
+#: devices/appliances.py:97
+msgid "Sanitize Mode"
+msgstr "حالت ضدعفونی"
+
+#: devices/appliances.py:97
+msgid "Supports high-temp sanitize."
+msgstr "پشتیبانی از ضدعفونی با دمای بالا."
+
+#: devices/appliances.py:100 devices/appliances.py:104
+msgid "Drum Capacity (kg)"
+msgstr "ظرفیت درام (کیلوگرم)"
+
+#: devices/appliances.py:101
+msgid "Spin Speed (RPM)"
+msgstr "سرعت چرخش (دور در دقیقه)"
+
+#: devices/appliances.py:101
+msgid "Maximum spin cycle speed."
+msgstr "حداکثر سرعت مرحلهٔ چرخش."
+
+#: devices/appliances.py:105
+msgid "Heat Pump"
+msgstr "پمپ حرارتی"
+
+#: devices/appliances.py:105
+msgid "Indicates if unit uses heat pump tech."
+msgstr "نشان می‌دهد دستگاه از فناوری پمپ حرارتی استفاده می‌کند یا نه."
+
+#: devices/appliances.py:108
+msgid "Max Temperature (°C)"
+msgstr "حداکثر دما (°C)"
+
+#: devices/appliances.py:109
+msgid "Shelf Levels"
+msgstr "تعداد طبقات"
+
+#: devices/appliances.py:110
+msgid "Convection Fan"
+msgstr "فن گردش هوا"
+
+#: devices/appliances.py:113
+msgid "Magnetron Watts"
+msgstr "توان مگنترون (وات)"
+
+#: devices/appliances.py:114
+msgid "Sensor Cook"
+msgstr "پخت هوشمند"
+
+#: devices/appliances.py:117
+msgid "Capacity (L)"
+msgstr "ظرفیت (لیتر)"
+
+#: devices/appliances.py:118
+msgid "Keep Warm (min)"
+msgstr "حالت گرم نگه‌دار (دقیقه)"
+
+#: devices/appliances.py:121
+msgid "Burner Count"
+msgstr "تعداد شعله"
+
+#: devices/appliances.py:122
+msgid "Fuel Type"
+msgstr "نوع سوخت"
+
+#: devices/appliances.py:122
+msgid "Primary fuel source."
+msgstr "نوع سوخت اصلی دستگاه."
+
+#: devices/appliances.py:125
+msgid "Volume (L)"
+msgstr "حجم (لیتر)"
+
+#: devices/appliances.py:126
+msgid "Ice Maker"
+msgstr "یخ‌ساز"
+
+#: devices/appliances.py:129
+msgid "Screen Size (inches)"
+msgstr "اندازه صفحه (اینچ)"
+
+#: devices/appliances.py:130
+msgid "Default Volume"
+msgstr "سطح صدای پیش‌فرض"
+
+#: devices/appliances.py:131
+msgid "Default Brightness"
+msgstr "روشنایی پیش‌فرض"
+
+#: devices/appliances.py:132
+msgid "Preferred Input"
+msgstr "ورودی ترجیحی"
+
+#: devices/appliances.py:132
+msgid "Default input when the TV powers on."
+msgstr "ورودی پیش‌فرض هنگام روشن شدن تلویزیون."
+
 #: devices/forms.py:52
-#, fuzzy
-#| msgid "Temperature"
 msgid "Kitchen Temperature"
-msgstr "دما"
+msgstr "دمای آشپزخانه"
 
 #: devices/forms.py:53
 msgid "sensors/kitchen/temp"
@@ -56,16 +166,130 @@ msgstr "ایمیل خود را وارد کنید"
 msgid "Enter your password"
 msgstr "رمز عبور خود را وارد کنید"
 
-#: devices/forms.py:169
+#: devices/forms.py:171
 msgid "kitchen/device/topic"
 msgstr "kitchen/device/topic"
 
-#: devices/forms.py:170
+#: devices/forms.py:172
 msgid "eco"
 msgstr "اکو"
 
+#: devices/models.py:14
+msgid "JSON"
+msgstr ""
+
+#: devices/models.py:30
+#, fuzzy
+#| msgid "Invalid payload."
+msgid "Invalid JSON data"
+msgstr "داده ارسالی نامعتبر است."
+
+#: devices/models.py:43 devices/templates/register_device.html:63
+msgid "Sensor"
+msgstr "سنسور"
+
+#: devices/models.py:44 devices/templates/register_device.html:62
+msgid "Actuator"
+msgstr "عملگر"
+
+#: devices/models.py:45 devices/templates/register_device.html:61
+msgid "Light"
+msgstr "چراغ"
+
+#: devices/models.py:46 devices/templates/register_device.html:64
+msgid "Thermostat"
+msgstr "ترموستات"
+
+#: devices/models.py:47
+msgid "Switch"
+msgstr ""
+
+#: devices/models.py:48
+msgid "Dishwasher"
+msgstr ""
+
+#: devices/models.py:49
+msgid "Washing Machine"
+msgstr ""
+
+#: devices/models.py:50
+msgid "Dryer"
+msgstr ""
+
+#: devices/models.py:51
+msgid "Oven"
+msgstr ""
+
+#: devices/models.py:52
+msgid "Microwave"
+msgstr ""
+
+#: devices/models.py:53
+msgid "Kettle"
+msgstr ""
+
+#: devices/models.py:54
+msgid "Gas Range"
+msgstr ""
+
+#: devices/models.py:55
+msgid "Fridge"
+msgstr ""
+
+#: devices/models.py:56
+msgid "TV"
+msgstr ""
+
+#: devices/models.py:76
+msgid "Admin"
+msgstr ""
+
+#: devices/models.py:77
+#, fuzzy
+#| msgid "Operator Login"
+msgid "Operator"
+msgstr "ورود اپراتور"
+
+#: devices/models.py:78
+#, fuzzy
+#| msgid "visitor"
+msgid "Visitor"
+msgstr "مهمان"
+
+#: devices/models.py:101 devices/models.py:121
+#: devices/templates/devices/monitoring/alarm_rules.html:60
+#: devices/templates/devices/monitoring/alarm_rules.html:112
+#: devices/templates/devices/monitoring/alarm_rules.html:159
+#: devices/templates/devices/monitoring/alarm_rules.html:210
+#: devices/templates/devices/monitoring/alarm_rules_2.html:123
+msgid "Info"
+msgstr "اطلاعات"
+
+#: devices/models.py:102 devices/models.py:122
+#: devices/templates/devices/monitoring/alarm_rules.html:61
+#: devices/templates/devices/monitoring/alarm_rules.html:113
+#: devices/templates/devices/monitoring/alarm_rules.html:160
+#: devices/templates/devices/monitoring/alarm_rules.html:211
+#: devices/templates/devices/monitoring/alarm_rules_2.html:124
+msgid "Warning"
+msgstr "هشدار"
+
+#: devices/models.py:103 devices/models.py:123
+#: devices/templates/devices/monitoring/alarm_rules.html:62
+#: devices/templates/devices/monitoring/alarm_rules.html:114
+#: devices/templates/devices/monitoring/alarm_rules.html:161
+#: devices/templates/devices/monitoring/alarm_rules.html:212
+#: devices/templates/devices/monitoring/alarm_rules_2.html:125
+msgid "Critical"
+msgstr "بحرانی"
+
+#: devices/tasks.py:88
+#, python-format
+msgid "%(device)s timer finished"
+msgstr ""
+
 #: devices/templates/dashboard.html:3 devices/templates/dashboard.html:8
-#: templates/base.html:86
+#: templates/base.html:119
 msgid "Dashboard"
 msgstr "داشبورد"
 
@@ -74,7 +298,7 @@ msgid "Quick actions based on your role."
 msgstr "اقدام‌های سریع بر اساس نقش شما."
 
 #: devices/templates/dashboard.html:12
-#: devices/templates/devices/monitoring/active_alarms.html:20
+#: devices/templates/devices/monitoring/active_alarms.html:28
 #: devices/templates/devices/monitoring/alarm_rules_2.html:34
 #: users/templates/users/create.html:28 users/templates/users/detail.html:11
 #: users/templates/users/edit.html:27 users/templates/users/list.html:32
@@ -114,25 +338,8 @@ msgid "Delete"
 msgstr "حذف"
 
 #: devices/templates/devices/confirm_delete.html:12
-#: devices/templates/devices/control.html:130
-#: devices/templates/devices/edit.html:57
-#: devices/templates/devices/edit.html:134
-#: devices/templates/devices/kitchen/form.html:26
-#: devices/templates/devices/kitchen/form.html:123
-#: devices/templates/login.html:38 devices/templates/register_device.html:45
-#: devices/templates/signup.html:38 templates/base.html:79
-#: templates/base.html:81
-msgid "Back"
-msgstr "بازگشت"
-
-#: devices/templates/devices/confirm_delete.html:13
-#: devices/templates/devices/control.html:131
-#: devices/templates/devices/edit.html:56
-#: devices/templates/devices/edit.html:136
-#: devices/templates/devices/kitchen/form.html:25
-#: devices/templates/devices/kitchen/form.html:124
 #: devices/templates/login.html:22 devices/templates/register_device.html:29
-#: devices/templates/signup.html:22 templates/base.html:84
+#: devices/templates/signup.html:22 templates/base.html:117
 msgid "Home"
 msgstr "صفحه اصلی"
 
@@ -148,7 +355,7 @@ msgstr "وضعیت روشن/خاموش"
 
 #: devices/templates/devices/control.html:28
 #: devices/templates/devices/detail.html:22
-#: devices/templates/devices/kitchen/form.html:53
+#: devices/templates/devices/kitchen/form.html:49
 #: devices/templates/devices/list.html:72
 #: devices/templates/devices/monitoring/alarm_rules.html:153
 #: devices/templates/devices/monitoring/alarm_rules_2.html:115
@@ -157,7 +364,7 @@ msgstr "روشن"
 
 #: devices/templates/devices/control.html:32
 #: devices/templates/devices/detail.html:24
-#: devices/templates/devices/kitchen/form.html:55
+#: devices/templates/devices/kitchen/form.html:51
 #: devices/templates/devices/list.html:74
 #: devices/templates/devices/monitoring/alarm_rules.html:154
 #: devices/templates/devices/monitoring/alarm_rules_2.html:116
@@ -165,8 +372,8 @@ msgid "Off"
 msgstr "خاموش"
 
 #: devices/templates/devices/control.html:39
-#: devices/templates/devices/edit.html:98
-#: devices/templates/devices/kitchen/form.html:70
+#: devices/templates/devices/edit.html:94
+#: devices/templates/devices/kitchen/form.html:66
 msgid "Target Temperature (°C)"
 msgstr "دما‌ی هدف (°C)"
 
@@ -176,9 +383,9 @@ msgid "Range %(min_temp)s – %(max_temp)s °C"
 msgstr "بازه %(min_temp)s تا %(max_temp)s درجه سانتی‌گراد"
 
 #: devices/templates/devices/control.html:50
-#: devices/templates/devices/edit.html:102
-#: devices/templates/devices/kitchen/form.html:74
-#: devices/templates/devices/kitchen/form.html:80
+#: devices/templates/devices/edit.html:98
+#: devices/templates/devices/kitchen/form.html:70
+#: devices/templates/devices/kitchen/form.html:76
 msgid "Mode"
 msgstr "حالت"
 
@@ -194,36 +401,57 @@ msgstr "پیشرفت"
 msgid "Reset progress"
 msgstr "بازنشانی پیشرفت"
 
-#: devices/templates/devices/control.html:87
+#: devices/templates/devices/control.html:88
+msgid ""
+"Timer is optional for this appliance; leave it unset if you just want manual "
+"control."
+msgstr ""
+"تایمر برای این دستگاه اختیاری است؛ اگر فقط می‌خواهید دستی کنترل کنید خالی "
+"بگذارید."
+
+#: devices/templates/devices/control.html:93
 msgid "Timer Duration (minutes)"
 msgstr "مدت زمان تایمر (دقیقه)"
 
 #: devices/templates/devices/control.html:100
-msgid "Start Timer"
-msgstr "شروع تایمر"
+msgid "Applies when the timer action below is set to start/update."
+msgstr ""
+"وقتی اعمال می‌شود که عملیات تایمر در پایین روی شروع/به‌روزرسانی تنظیم شده باشد."
+
+#: devices/templates/devices/control.html:103
+msgid "Timer Action"
+msgstr "عملیات تایمر"
+
+#: devices/templates/devices/control.html:106
+msgid "No change"
+msgstr "بدون تغییر"
 
 #: devices/templates/devices/control.html:107
-msgid "Cancel Timer"
-msgstr "لغو تایمر"
+msgid "Start / update timer (applies on Publish Controls)"
+msgstr "شروع / به‌روزرسانی تایمر (با انتشار کنترل‌ها اعمال می‌شود)"
 
-#: devices/templates/devices/control.html:113
+#: devices/templates/devices/control.html:108
+msgid "Cancel timer (applies on Publish Controls)"
+msgstr "لغو تایمر (با انتشار کنترل‌ها اعمال می‌شود)"
+
+#: devices/templates/devices/control.html:114
 #: devices/templates/devices/detail.html:19
-#: devices/templates/devices/edit.html:82
-#: devices/templates/devices/kitchen/form.html:45
-#: devices/templates/devices/kitchen/form.html:50
+#: devices/templates/devices/edit.html:78
+#: devices/templates/devices/kitchen/form.html:41
+#: devices/templates/devices/kitchen/form.html:46
 #: devices/templates/devices/list.html:51
 msgid "Status"
 msgstr "وضعیت"
 
-#: devices/templates/devices/control.html:114
+#: devices/templates/devices/control.html:115
 msgid "Remaining"
 msgstr "باقیمانده"
 
-#: devices/templates/devices/control.html:123
+#: devices/templates/devices/control.html:124
 msgid "No active timer for this appliance."
 msgstr "برای این دستگاه تایمر فعالی وجود ندارد."
 
-#: devices/templates/devices/control.html:129
+#: devices/templates/devices/control.html:130
 msgid "Publish Controls"
 msgstr "ارسال فرمان‌ها"
 
@@ -242,7 +470,7 @@ msgid "Capacity %(capacity)s W"
 msgstr "ظرفیت %(capacity)s وات"
 
 #: devices/templates/devices/detail.html:39
-#: devices/templates/register_device.html:66
+#: devices/templates/register_device.html:65
 msgid "Temperature"
 msgstr "دما"
 
@@ -260,72 +488,70 @@ msgid "Metadata"
 msgstr "داده‌های متا"
 
 #: devices/templates/devices/detail.html:69
-#: devices/templates/devices/kitchen/list.html:44
+#: devices/templates/devices/kitchen/list.html:43
 #: devices/templates/devices/list.html:99
 msgid "Control"
 msgstr "کنترل"
 
 #: devices/templates/devices/detail.html:72
-#: devices/templates/devices/kitchen/list.html:40
+#: devices/templates/devices/kitchen/list.html:39
 #: devices/templates/devices/list.html:104 users/templates/users/list.html:61
 msgid "Edit"
 msgstr "ویرایش"
 
-#: devices/templates/devices/edit.html:5
-#: devices/templates/devices/edit.html:61
+#: devices/templates/devices/edit.html:5 devices/templates/devices/edit.html:57
 #, python-format
 msgid "Edit %(device_name)s"
 msgstr "ویرایش %(device_name)s"
 
-#: devices/templates/devices/edit.html:7
-#: devices/templates/devices/edit.html:63
+#: devices/templates/devices/edit.html:7 devices/templates/devices/edit.html:59
 msgid "Create Device"
 msgstr "ساخت دستگاه"
 
-#: devices/templates/devices/edit.html:72
-#: devices/templates/devices/kitchen/form.html:35
+#: devices/templates/devices/edit.html:68
+#: devices/templates/devices/kitchen/form.html:31
 #: devices/templates/devices/list.html:47
 msgid "Name"
 msgstr "نام"
 
-#: devices/templates/devices/edit.html:77
+#: devices/templates/devices/edit.html:73
 #: devices/templates/devices/list.html:48
 msgid "Type"
 msgstr "نوع"
 
-#: devices/templates/devices/edit.html:87
+#: devices/templates/devices/edit.html:83
 #: devices/templates/devices/list.html:49
 msgid "Topic"
 msgstr "تاپیک"
 
-#: devices/templates/devices/edit.html:90
+#: devices/templates/devices/edit.html:86
 msgid "MQTT topic that this device publishes to."
 msgstr "تاپیک MQTT که این دستگاه روی آن پیام می‌فرستد."
 
-#: devices/templates/devices/edit.html:93
-#: devices/templates/devices/kitchen/form.html:65
+#: devices/templates/devices/edit.html:89
+#: devices/templates/devices/kitchen/form.html:61
 msgid "Power Rating (W)"
 msgstr "توان نامی (وات)"
 
-#: devices/templates/devices/edit.html:95
+#: devices/templates/devices/edit.html:91
 msgid "Typical draw when the device is actively running."
 msgstr "مصرف معمول هنگام کارکرد دستگاه."
 
-#: devices/templates/devices/edit.html:106
+#: devices/templates/devices/edit.html:102
 msgid "Metadata (JSON)"
 msgstr "داده‌های متا (JSON)"
 
-#: devices/templates/devices/edit.html:112
-#: devices/templates/devices/kitchen/form.html:86
+#: devices/templates/devices/edit.html:108
+#: devices/templates/devices/kitchen/form.html:82
 msgid "Schematic"
 msgstr "شماتیک"
 
-#: devices/templates/devices/edit.html:122
+#: devices/templates/devices/edit.html:118
 msgid "Device"
 msgstr "دستگاه"
 
-#: devices/templates/devices/edit.html:131
-#: devices/templates/devices/kitchen/form.html:122
+#: devices/templates/devices/edit.html:127
+#: devices/templates/devices/kitchen/form.html:118
 #: devices/templates/devices/monitoring/alarm_rules.html:71
 #: devices/templates/devices/monitoring/alarm_rules.html:123
 #: devices/templates/devices/monitoring/alarm_rules.html:170
@@ -352,42 +578,46 @@ msgstr "آزمایشگاه آشپزخانه"
 msgid "New Appliance"
 msgstr "وسیله جدید"
 
-#: devices/templates/devices/kitchen/form.html:39
+#: devices/templates/devices/kitchen/form.html:35
 msgid "Device Type"
 msgstr "نوع وسیله"
 
-#: devices/templates/devices/kitchen/form.html:41
+#: devices/templates/devices/kitchen/form.html:37
 msgid "Type locked after creation."
 msgstr "نوع پس از ایجاد قابل تغییر نیست."
 
-#: devices/templates/devices/kitchen/form.html:61
+#: devices/templates/devices/kitchen/form.html:57
 msgid "MQTT Topic"
 msgstr "تاپیک MQTT"
 
-#: devices/templates/devices/kitchen/form.html:79
+#: devices/templates/devices/kitchen/form.html:75
 msgid "Target Temperature"
 msgstr "دما‌ی هدف"
 
-#: devices/templates/devices/kitchen/form.html:81
+#: devices/templates/devices/kitchen/form.html:77
 msgid "Runtime controls are managed from the appliance Control screen."
 msgstr "کنترل‌های زمان اجرا از صفحهٔ کنترل وسیله مدیریت می‌شوند."
 
-#: devices/templates/devices/kitchen/form.html:96
+#: devices/templates/devices/kitchen/form.html:92
 msgid "Appliance Profile"
 msgstr "پروفایل وسیله"
 
-#: devices/templates/devices/kitchen/form.html:98
-#, python-format
+#: devices/templates/devices/kitchen/form.html:94
+#, fuzzy, python-format
+#| msgid ""
+#| "\n"
+#| "                Inputs for %(appliance)s\n"
+#| "              "
 msgid ""
 "\n"
-"                Inputs for %(appliance)s\n"
+"                Inputs for %(appliance_label)s\n"
 "              "
 msgstr ""
 "\n"
 "                ورودی‌های مربوط به %(appliance)s\n"
 "              "
 
-#: devices/templates/devices/kitchen/form.html:116
+#: devices/templates/devices/kitchen/form.html:112
 msgid "No special inputs required."
 msgstr "ورودی ویژه‌ای نیاز نیست."
 
@@ -395,7 +625,7 @@ msgstr "ورودی ویژه‌ای نیاز نیست."
 #: devices/templates/devices/kitchen/list.html:9
 #: devices/templates/devices/list.html:31
 #: devices/templates/devices/monitoring/alarm_rules.html:26
-#: devices/views.py:453
+#: devices/views.py:485
 msgid "Kitchen Appliances"
 msgstr "وسایل آشپزخانه"
 
@@ -407,23 +637,19 @@ msgstr "کنترل‌های اختصاصی برای فر، کتری، ماشین
 msgid "Add appliance"
 msgstr "افزودن وسیله"
 
-#: devices/templates/devices/kitchen/list.html:15
-msgid "Back to all devices"
-msgstr "بازگشت به همه دستگاه‌ها"
-
-#: devices/templates/devices/kitchen/list.html:33
+#: devices/templates/devices/kitchen/list.html:32
 msgid "Running"
 msgstr "در حال کار"
 
-#: devices/templates/devices/kitchen/list.html:35
+#: devices/templates/devices/kitchen/list.html:34
 msgid "Idle"
 msgstr "غیرفعال"
 
-#: devices/templates/devices/kitchen/list.html:42
+#: devices/templates/devices/kitchen/list.html:41
 msgid "Open detail"
 msgstr "نمایش جزئیات"
 
-#: devices/templates/devices/kitchen/list.html:51
+#: devices/templates/devices/kitchen/list.html:50
 msgid "No kitchen appliances yet. Start by creating one."
 msgstr "هنوز وسیله‌ای ثبت نشده است؛ یکی را ایجاد کنید."
 
@@ -435,7 +661,7 @@ msgstr "دستگاه‌ها"
 msgid "Search by name, topic, or type"
 msgstr "جست‌وجو بر اساس نام، تاپیک یا نوع"
 
-#: devices/templates/devices/list.html:20 devices/views.py:447
+#: devices/templates/devices/list.html:20 devices/views.py:479
 msgid "New Device"
 msgstr "دستگاه جدید"
 
@@ -470,49 +696,67 @@ msgstr "ظرفیت %(power)s وات"
 msgid "No devices."
 msgstr "هیچ دستگاهی وجود ندارد."
 
-#: devices/templates/devices/monitoring/active_alarms.html:3
-#: devices/templates/devices/monitoring/active_alarms.html:15
-#: devices/views.py:466
-msgid "Active Alarms"
-msgstr "آلارم‌های فعال"
-
-#: devices/templates/devices/monitoring/active_alarms.html:16
-msgid "Live alarms that haven’t been cleared."
-msgstr "آلارم‌های زنده‌ای که هنوز برطرف نشده‌اند."
-
-#: devices/templates/devices/monitoring/active_alarms.html:23
-msgid "Edit Rules"
-msgstr "ویرایش قوانین"
-
-#: devices/templates/devices/monitoring/active_alarms.html:38
+#: devices/templates/devices/monitoring/_alarm_list.html:12
 msgid "acknowledged"
 msgstr "تأیید شد"
 
-#: devices/templates/devices/monitoring/active_alarms.html:43
+#: devices/templates/devices/monitoring/_alarm_list.html:17
 msgid "Observed"
 msgstr "مقدار مشاهده‌شده"
 
-#: devices/templates/devices/monitoring/active_alarms.html:46
+#: devices/templates/devices/monitoring/_alarm_list.html:20
 msgid "Note"
 msgstr "یادداشت"
 
-#: devices/templates/devices/monitoring/active_alarms.html:51
+#: devices/templates/devices/monitoring/_alarm_list.html:26
 msgid "Acknowledge"
 msgstr "تأیید"
 
-#: devices/templates/devices/monitoring/active_alarms.html:54
+#: devices/templates/devices/monitoring/_alarm_list.html:30
 msgid "Clear"
 msgstr "پاک کردن"
 
-#: devices/templates/devices/monitoring/active_alarms.html:60
-msgid "No active alarms"
+#: devices/templates/devices/monitoring/_alarm_list.html:39
+msgid "All clear right now."
+msgstr ""
+
+#: devices/templates/devices/monitoring/active_alarms.html:3
+#: devices/templates/devices/monitoring/active_alarms.html:23
+#: devices/views.py:498
+msgid "Active Alarms"
+msgstr "آلارم‌های فعال"
+
+#: devices/templates/devices/monitoring/active_alarms.html:24
+msgid "Live alarms that haven’t been cleared."
+msgstr "آلارم‌های زنده‌ای که هنوز برطرف نشده‌اند."
+
+#: devices/templates/devices/monitoring/active_alarms.html:31
+msgid "Edit Rules"
+msgstr "ویرایش قوانین"
+
+#: devices/templates/devices/monitoring/active_alarms.html:43
+msgid "Alerts"
+msgstr "هشدارها"
+
+#: devices/templates/devices/monitoring/active_alarms.html:49
+msgid "Notifications"
+msgstr "اعلان‌ها"
+
+#: devices/templates/devices/monitoring/active_alarms.html:54
+#, fuzzy
+#| msgid "No active alarms"
+msgid "No active alerts right now."
 msgstr "آلارم فعالی وجود ندارد"
+
+#: devices/templates/devices/monitoring/active_alarms.html:57
+msgid "No notifications at the moment."
+msgstr ""
 
 #: devices/templates/devices/monitoring/alarm_rules.html:3
 #: devices/templates/devices/monitoring/alarm_rules.html:16
 #: devices/templates/devices/monitoring/alarm_rules_2.html:7
 #: devices/templates/devices/monitoring/alarm_rules_2.html:62
-#: devices/views.py:460
+#: devices/views.py:492
 msgid "Alarm Rules"
 msgstr "قوانین آلارم"
 
@@ -553,30 +797,6 @@ msgstr "حداقل"
 #: devices/templates/devices/monitoring/alarm_rules_2.html:104
 msgid "Max"
 msgstr "حداکثر"
-
-#: devices/templates/devices/monitoring/alarm_rules.html:60
-#: devices/templates/devices/monitoring/alarm_rules.html:112
-#: devices/templates/devices/monitoring/alarm_rules.html:159
-#: devices/templates/devices/monitoring/alarm_rules.html:210
-#: devices/templates/devices/monitoring/alarm_rules_2.html:123
-msgid "Info"
-msgstr "اطلاعات"
-
-#: devices/templates/devices/monitoring/alarm_rules.html:61
-#: devices/templates/devices/monitoring/alarm_rules.html:113
-#: devices/templates/devices/monitoring/alarm_rules.html:160
-#: devices/templates/devices/monitoring/alarm_rules.html:211
-#: devices/templates/devices/monitoring/alarm_rules_2.html:124
-msgid "Warning"
-msgstr "هشدار"
-
-#: devices/templates/devices/monitoring/alarm_rules.html:62
-#: devices/templates/devices/monitoring/alarm_rules.html:114
-#: devices/templates/devices/monitoring/alarm_rules.html:161
-#: devices/templates/devices/monitoring/alarm_rules.html:212
-#: devices/templates/devices/monitoring/alarm_rules_2.html:125
-msgid "Critical"
-msgstr "بحرانی"
 
 #: devices/templates/devices/monitoring/alarm_rules.html:65
 #: devices/templates/devices/monitoring/alarm_rules.html:117
@@ -645,8 +865,8 @@ msgid "Welcome, %(name)s"
 msgstr "‏%(name)s خوش آمدید"
 
 #: devices/templates/devices/monitoring/alarm_rules_2.html:51
-#: devices/templates/register_device.html:89 templates/base.html:114
-#: templates/base.html:147 templates/base.html:164
+#: devices/templates/register_device.html:88 templates/base.html:157
+#: templates/base.html:206 templates/base.html:223
 msgid "Logout"
 msgstr "خروج"
 
@@ -675,55 +895,39 @@ msgstr "فعال شود وقتی وضعیت برابر است با"
 msgid "Log in"
 msgstr "ورود"
 
-#: devices/templates/login.html:41
+#: devices/templates/login.html:40
 msgid "Welcome Back"
 msgstr "خوش آمدید"
 
-#: devices/templates/login.html:43
+#: devices/templates/login.html:42
 msgid ""
 "Sign in to control devices and review telemetry. Admins can add new members "
 "from the dashboard after logging in."
 msgstr ""
-"برای کنترل دستگاه‌ها و مشاهده تله‌متری وارد شوید؛ مدیران پس از ورود "
-"می‌توانند اعضای جدید اضافه کنند."
+"برای کنترل دستگاه‌ها و مشاهده تله‌متری وارد شوید؛ مدیران پس از ورود می‌توانند "
+"اعضای جدید اضافه کنند."
 
-#: devices/templates/login.html:69 templates/base.html:117
+#: devices/templates/login.html:68 templates/base.html:160
 msgid "Login"
 msgstr "ورود"
 
-#: devices/templates/login.html:73
+#: devices/templates/login.html:72
 msgid ""
-"Need access? Contact your system administrator to create an account from the"
-" dashboard."
+"Need access? Contact your system administrator to create an account from the "
+"dashboard."
 msgstr ""
 "برای دسترسی با مدیر سامانه تماس بگیرید تا از داشبورد برایتان حساب بسازد."
 
 #: devices/templates/register_device.html:7
-#: devices/templates/register_device.html:48
+#: devices/templates/register_device.html:47
 msgid "Register Device"
 msgstr "ثبت دستگاه"
 
-#: devices/templates/register_device.html:61
+#: devices/templates/register_device.html:60
 msgid "Select Type"
 msgstr "نوع را انتخاب کنید"
 
-#: devices/templates/register_device.html:62
-msgid "Light"
-msgstr "چراغ"
-
-#: devices/templates/register_device.html:63
-msgid "Actuator"
-msgstr "عملگر"
-
-#: devices/templates/register_device.html:64
-msgid "Sensor"
-msgstr "سنسور"
-
-#: devices/templates/register_device.html:65
-msgid "Thermostat"
-msgstr "ترموستات"
-
-#: devices/templates/register_device.html:86
+#: devices/templates/register_device.html:85
 msgid "Submit"
 msgstr "ارسال"
 
@@ -731,90 +935,226 @@ msgstr "ارسال"
 msgid "Sign Up"
 msgstr "ثبت‌نام"
 
-#: devices/templates/signup.html:41
+#: devices/templates/signup.html:40
 msgid "Create a new account (admin only)"
 msgstr "ایجاد حساب جدید (فقط مدیر)"
 
-#: devices/templates/signup.html:43
+#: devices/templates/signup.html:42
 msgid ""
 "This form is reserved for administrators who need to provision accounts for "
 "the team."
 msgstr "این فرم مخصوص مدیرانی است که باید برای تیم حساب ایجاد کنند."
 
-#: devices/templates/signup.html:90
+#: devices/templates/signup.html:89
 msgid "Create Account"
 msgstr "ایجاد حساب"
 
-#: devices/templates/signup.html:95
+#: devices/templates/signup.html:94
 msgid "You are currently signed in."
 msgstr "شما هم‌اکنون وارد سیستم هستید."
 
-#: devices/templates/signup.html:97
+#: devices/templates/signup.html:96
 msgid "Continue managing users from the"
 msgstr "مدیریت کاربران را ادامه دهید از "
 
-#: devices/templates/signup.html:98
+#: devices/templates/signup.html:97
 msgid "user directory"
 msgstr "فهرست کاربران"
 
-#: devices/views.py:395
+#: devices/templatetags/extras.py:8
+#, fuzzy
+#| msgid "eco"
+msgid "Eco"
+msgstr "اکو"
+
+#: devices/templatetags/extras.py:9
+msgid "Normal"
+msgstr ""
+
+#: devices/templatetags/extras.py:10
+msgid "Intense"
+msgstr ""
+
+#: devices/templatetags/extras.py:11
+msgid "Cold"
+msgstr ""
+
+#: devices/templatetags/extras.py:12
+msgid "Warm"
+msgstr ""
+
+#: devices/templatetags/extras.py:13
+msgid "Hot"
+msgstr ""
+
+#: devices/templatetags/extras.py:14
+msgid "Gentle"
+msgstr ""
+
+#: devices/templatetags/extras.py:15
+msgid "Boost"
+msgstr ""
+
+#: devices/templatetags/extras.py:16
+msgid "Bake"
+msgstr ""
+
+#: devices/templatetags/extras.py:17
+msgid "Broil"
+msgstr ""
+
+#: devices/templatetags/extras.py:18
+msgid "Fan"
+msgstr ""
+
+#: devices/templatetags/extras.py:19
+msgid "Defrost"
+msgstr ""
+
+#: devices/templatetags/extras.py:20
+msgid "Medium"
+msgstr ""
+
+#: devices/templatetags/extras.py:21
+msgid "High"
+msgstr ""
+
+#: devices/templatetags/extras.py:22
+msgid "Keep Warm"
+msgstr ""
+
+#: devices/templatetags/extras.py:23
+msgid "Boil"
+msgstr ""
+
+#: devices/templatetags/extras.py:24
+msgid "Simmer"
+msgstr ""
+
+#: devices/templatetags/extras.py:25
+msgid "Cinema"
+msgstr ""
+
+#: devices/templatetags/extras.py:26
+msgid "Standard"
+msgstr ""
+
+#: devices/templatetags/extras.py:27
+msgid "Game"
+msgstr ""
+
+#: devices/templatetags/extras.py:28
+msgid "Vivid"
+msgstr ""
+
+#: devices/templatetags/extras.py:29
+#, fuzzy
+#| msgid "Actions"
+msgid "Vacation"
+msgstr "اقدام‌ها"
+
+#: devices/templatetags/extras.py:30
+msgid "Rinse"
+msgstr ""
+
+#: devices/templatetags/extras.py:31
+msgid "Wash"
+msgstr ""
+
+#: devices/templatetags/extras.py:32
+msgid "Dry"
+msgstr ""
+
+#: devices/templatetags/extras.py:33
+msgid "Cooldown"
+msgstr ""
+
+#: devices/templatetags/extras.py:34
+msgid "Prewash"
+msgstr ""
+
+#: devices/templatetags/extras.py:35
+msgid "Spin"
+msgstr ""
+
+#: devices/views.py:144 devices/views.py:251
+#, python-format
+msgid "Device \"%(name)s\" created successfully."
+msgstr "دستگاه «%(name)s» با موفقیت ایجاد شد."
+
+#: devices/views.py:169 devices/views.py:286
+#, python-format
+msgid "Device \"%(name)s\" updated successfully."
+msgstr "دستگاه «%(name)s» با موفقیت به‌روزرسانی شد."
+
+#: devices/views.py:179
+#, python-format
+msgid "Device saved, but MQTT publish failed: %(error)s"
+msgstr "دستگاه ذخیره شد، اما انتشار MQTT با خطا مواجه شد: %(error)s"
+
+#: devices/views.py:297
+#, python-format
+msgid "Device \"%(name)s\" removed successfully."
+msgstr "دستگاه «%(name)s» با موفقیت حذف شد."
+
+#: devices/views.py:426
 #, python-format
 msgid "Created account %(username)s with role %(role)s."
 msgstr "حساب %(username)s با نقش %(role)s ایجاد شد."
 
-#: devices/views.py:421
+#: devices/views.py:453
 msgid "Grafana Dashboard"
 msgstr "داشبورد گرافانا"
 
-#: devices/views.py:423
+#: devices/views.py:455
 msgid "View metrics and charts"
 msgstr "نمایش شاخص‌ها و نمودارها"
 
-#: devices/views.py:429
+#: devices/views.py:461
 msgid "Power Usage"
 msgstr "مصرف انرژی"
 
-#: devices/views.py:431
+#: devices/views.py:463
 msgid "Track appliance energy consumption"
 msgstr "پیگیری مصرف انرژی وسایل"
 
-#: devices/views.py:440
+#: devices/views.py:472
 msgid "Manage Devices"
 msgstr "مدیریت دستگاه‌ها"
 
-#: devices/views.py:442
+#: devices/views.py:474
 msgid "Add, remove, or edit devices"
 msgstr "افزودن، حذف یا ویرایش دستگاه‌ها"
 
-#: devices/views.py:449
+#: devices/views.py:481
 msgid "Create a new device"
 msgstr "ایجاد یک دستگاه جدید"
 
-#: devices/views.py:455
+#: devices/views.py:487
 msgid "Dedicated controls for ovens, kettles, etc."
 msgstr "کنترل‌های اختصاصی برای فر، کتری و ..."
 
-#: devices/views.py:462
+#: devices/views.py:494
 msgid "Set thresholds / states per device"
 msgstr "تنظیم آستانه‌ها یا وضعیت برای هر دستگاه"
 
-#: devices/views.py:468
+#: devices/views.py:500
 msgid "See and manage raised alarms"
 msgstr "مشاهده و مدیریت آلارم‌های ایجادشده"
 
-#: devices/views.py:474
+#: devices/views.py:506
 msgid "Manage Users"
 msgstr "مدیریت کاربران"
 
-#: devices/views.py:476
+#: devices/views.py:508
 msgid "Create, disable, or edit users"
 msgstr "ایجاد، غیرفعال یا ویرایش کاربران"
 
-#: devices/views.py:480 users/templates/users/list.html:21
+#: devices/views.py:512 users/templates/users/list.html:21
 msgid "New User"
 msgstr "کاربر جدید"
 
-#: devices/views.py:482
+#: devices/views.py:514
 msgid "Create a new user"
 msgstr "ایجاد یک کاربر جدید"
 
@@ -842,78 +1182,86 @@ msgstr "امکان اتصال به گرافانا وجود ندارد."
 msgid "Invalid Grafana credentials."
 msgstr "اطلاعات ورود به گرافانا صحیح نیست."
 
-#: templates/base.html:93
+#: templates/base.html:129
+msgid "Refresh"
+msgstr "تازه‌سازی"
+
+#: templates/base.html:136
 msgid "Select language"
 msgstr "انتخاب زبان"
 
-#: templates/base.html:135
+#: templates/base.html:175
+msgid "Notice"
+msgstr ""
+
+#: templates/base.html:194
 msgid "Your session is about to expire"
 msgstr "نشست شما رو به پایان است"
 
-#: templates/base.html:137
+#: templates/base.html:196
 msgid ""
 "For security reasons sessions end after 10 minutes of inactivity. Would you "
 "like to keep it alive?"
 msgstr ""
-"به دلایل امنیتی، جلسه پس از ۱۰ دقیقه عدم فعالیت پایان می‌یابد. آیا می‌خواهید"
-" آن را فعال نگه دارید؟"
+"به دلایل امنیتی، جلسه پس از ۱۰ دقیقه عدم فعالیت پایان می‌یابد. آیا می‌خواهید "
+"آن را فعال نگه دارید؟"
 
-#: templates/base.html:143
+#: templates/base.html:202
 msgid "Continue Session"
 msgstr "ادامه نشست"
 
-#: templates/base.html:155
+#: templates/base.html:214
 msgid "Sign out?"
 msgstr "خروج از حساب؟"
 
-#: templates/base.html:156
+#: templates/base.html:215
 msgid "You will be redirected to the home page after logging out."
 msgstr "پس از خروج به صفحهٔ اصلی هدایت می‌شوید."
 
-#: templates/base.html:160
+#: templates/base.html:219
 msgid "Stay Logged In"
 msgstr "ماندن در حساب"
 
-#: templates/base.html:172
+#: templates/base.html:231
 msgid "Please confirm"
 msgstr "لطفاً تأیید کنید"
 
-#: templates/base.html:173 templates/base.html:250
+#: templates/base.html:232 templates/base.html:309
 msgid "Are you sure?"
 msgstr "مطمئن هستید؟"
 
-#: templates/base.html:177 templates/base.html:213
+#: templates/base.html:236 templates/base.html:272
 #: users/templates/users/confirm_delete.html:12
 #: users/templates/users/create.html:46
 msgid "Cancel"
 msgstr "انصراف"
 
-#: templates/base.html:181 templates/base.html:209
+#: templates/base.html:240 templates/base.html:268
 msgid "Continue"
 msgstr "ادامه"
 
-#: templates/base.html:190
+#: templates/base.html:249
 msgid "Sign in to Grafana"
 msgstr "ورود به گرافانا"
 
-#: templates/base.html:191
+#: templates/base.html:250
 msgid "Close"
 msgstr "بستن"
 
-#: templates/base.html:193
+#: templates/base.html:252
 msgid "Enter your Grafana credentials to continue."
 msgstr "برای ادامه، اطلاعات ورود به گرافانا را وارد کنید."
 
-#: templates/base.html:196 users/templates/users/create.html:13
+#: templates/base.html:255 users/templates/users/create.html:13
 #: users/templates/users/edit.html:12 users/templates/users/list.html:30
 msgid "Username"
 msgstr "نام کاربری"
 
-#: templates/base.html:201 users/templates/users/create.html:33
+#: templates/base.html:260 users/templates/users/create.html:33
 msgid "Password"
 msgstr "رمز عبور"
 
-#: templates/base.html:342
+#: templates/base.html:401
 msgid "Unable to authenticate with Grafana."
 msgstr "ورود به گرافانا انجام نشد."
 
@@ -926,8 +1274,7 @@ msgid "IoTHive · Unified MQTT Lab"
 msgstr "IoTHive · آزمایشگاه یکپارچه MQTT"
 
 #: templates/home.html:12
-msgid ""
-"A full-stack MQTT lab for simulating and supervising modern IoT fleets."
+msgid "A full-stack MQTT lab for simulating and supervising modern IoT fleets."
 msgstr ""
 "آزمایشگاه کامل MQTT برای شبیه‌سازی و نظارت بر ناوگان‌های مدرن اینترنت اشیا."
 
@@ -938,8 +1285,8 @@ msgid ""
 "over MQTT in real time—no physical hardware required."
 msgstr ""
 "Mosquitto موضوعات زنده را مدیریت می‌کند، Telegraf داده‌ها را به InfluxDB "
-"می‌فرستد، Grafana تله‌متری توان و زمان را نمایش می‌دهد و پنل کنترل فرمان‌ها "
-"را در لحظه از طریق MQTT بازمی‌گرداند—همه بدون سخت‌افزار واقعی."
+"می‌فرستد، Grafana تله‌متری توان و زمان را نمایش می‌دهد و پنل کنترل فرمان‌ها را "
+"در لحظه از طریق MQTT بازمی‌گرداند—همه بدون سخت‌افزار واقعی."
 
 #: templates/home.html:25
 msgid "Manage Kitchen Appliances"
@@ -958,8 +1305,7 @@ msgstr ""
 #: templates/home.html:40
 msgid "Smart home schematic hovering above a hand with IoT icons around it"
 msgstr ""
-"نقشه خانهٔ هوشمند شناور بالای دستی که با آیکون‌های اینترنت اشیا احاطه شده "
-"است"
+"نقشه خانهٔ هوشمند شناور بالای دستی که با آیکون‌های اینترنت اشیا احاطه شده است"
 
 #: templates/home.html:47
 msgid "Full appliance roster"
@@ -967,12 +1313,11 @@ msgstr "فهرست کامل وسایل"
 
 #: templates/home.html:48
 msgid ""
-"Kitchen gear, thermostats, switches, TVs, and sensors all emit "
-"<code>iot/#</code> payloads with cycle progress, mode, timers, and power "
-"draw."
+"Kitchen gear, thermostats, switches, TVs, and sensors all emit <code>iot/#</"
+"code> payloads with cycle progress, mode, timers, and power draw."
 msgstr ""
-"وسایل آشپزخانه، ترموستات‌ها، کلیدها، تلویزیون‌ها و سنسورها همگی روی "
-"<code>iot/#</code> اطلاعات چرخه، حالت، تایمر و توان مصرفی می‌فرستند."
+"وسایل آشپزخانه، ترموستات‌ها، کلیدها، تلویزیون‌ها و سنسورها همگی روی <code>iot/"
+"#</code> اطلاعات چرخه، حالت، تایمر و توان مصرفی می‌فرستند."
 
 #: templates/home.html:51
 msgid "Real-time analytics"
@@ -983,9 +1328,9 @@ msgid ""
 "Telegraf + InfluxDB keep Grafana boards current, enabling anomaly detection "
 "and ML training on the exact stream operators manipulate."
 msgstr ""
-"ترکیب Telegraf و InfluxDB داشبوردهای Grafana را به‌روز نگه می‌دارد و امکان "
-"کشف ناهنجاری و آموزش مدل‌های یادگیری ماشین روی همان داده‌ای که اپراتورها با "
-"آن کار می‌کنند را فراهم می‌کند."
+"ترکیب Telegraf و InfluxDB داشبوردهای Grafana را به‌روز نگه می‌دارد و امکان کشف "
+"ناهنجاری و آموزش مدل‌های یادگیری ماشین روی همان داده‌ای که اپراتورها با آن کار "
+"می‌کنند را فراهم می‌کند."
 
 #: templates/home.html:55
 msgid "Operator guardrails"
@@ -996,9 +1341,29 @@ msgid ""
 "Role-based controls let staff toggle appliances, schedule timers, and push "
 "commands back over MQTT while admins seed inventory and tune alarms."
 msgstr ""
-"کنترل‌های مبتنی بر نقش اجازه می‌دهند کارکنان وسایل را روشن/خاموش کنند، تایمر"
-" تنظیم کنند و فرمان‌ها را از طریق MQTT بفرستند، در حالی‌که مدیران موجودی را "
-"ثبت و آلارم‌ها را تنظیم می‌کنند."
+"کنترل‌های مبتنی بر نقش اجازه می‌دهند کارکنان وسایل را روشن/خاموش کنند، تایمر "
+"تنظیم کنند و فرمان‌ها را از طریق MQTT بفرستند، در حالی‌که مدیران موجودی را ثبت "
+"و آلارم‌ها را تنظیم می‌کنند."
+
+#: users/forms.py:14
+msgid "New password"
+msgstr "رمز عبور جدید"
+
+#: users/forms.py:15
+msgid "Leave blank to keep the existing password."
+msgstr "برای حفظ رمز فعلی، این قسمت را خالی بگذارید."
+
+#: users/forms.py:20
+msgid "Confirm new password"
+msgstr "تکرار رمز عبور جدید"
+
+#: users/forms.py:73
+msgid "Please enter the new password twice."
+msgstr "لطفاً رمز عبور جدید را دو بار وارد کنید."
+
+#: users/forms.py:75
+msgid "The two password fields didn’t match."
+msgstr "دو مقدار رمز عبور با هم مطابقت ندارند."
 
 #: users/templates/users/confirm_delete.html:3
 msgid "Delete User"
@@ -1080,3 +1445,34 @@ msgstr "صفحه %(page)s از %(total)s"
 #: users/templates/users/list.html:95
 msgid "Next"
 msgstr "بعدی"
+
+#: users/views.py:64
+#, python-format
+msgid "User \"%(username)s\" updated successfully."
+msgstr "کاربر «%(username)s» با موفقیت به‌روزرسانی شد."
+
+#: users/views.py:74
+msgid "You can’t delete your own account."
+msgstr ""
+
+#: users/views.py:77
+#, python-format
+msgid "User \"%(username)s\" removed successfully."
+msgstr "کاربر «%(username)s» با موفقیت حذف شد."
+
+#: users/views.py:92
+#, python-format
+msgid "User \"%(username)s\" created successfully."
+msgstr "کاربر «%(username)s» با موفقیت ایجاد شد."
+
+#~ msgid "Back"
+#~ msgstr "بازگشت"
+
+#~ msgid "Start Timer"
+#~ msgstr "شروع تایمر"
+
+#~ msgid "Cancel Timer"
+#~ msgstr "لغو تایمر"
+
+#~ msgid "Back to all devices"
+#~ msgstr "بازگشت به همه دستگاه‌ها"

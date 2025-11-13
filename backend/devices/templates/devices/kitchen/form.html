@@ -21,10 +21,6 @@
           {% endif %}
         </h1>
       </div>
-      <div class="flex items-center gap-2">
-        <a href="{% url 'home' %}" class="px-4 py-2 rounded-xl border border-[color:var(--border)]">{% trans "Home" %}</a>
-        <a href="{% url 'devices:kitchen_list' %}" class="px-4 py-2 rounded-xl border border-[color:var(--border)]">{% trans "Back" %}</a>
-      </div>
     </div>
 
     <form method="post" class="mt-6 grid gap-8">
@@ -77,7 +73,7 @@
           {% else %}
             <div class="text-sm text-[color:var(--text-secondary)] space-y-1">
               <p>{% trans "Target Temperature" %}: <span class="font-semibold text-[color:var(--text-primary)]">{{ form.instance.target_temperature|default:"—" }}</span></p>
-              <p>{% trans "Mode" %}: <span class="font-semibold text-[color:var(--text-primary)]">{{ form.instance.mode|default:"—" }}</span></p>
+              <p>{% trans "Mode" %}: <span class="font-semibold text-[color:var(--text-primary)]">{{ form.instance.mode|appliance_label|default:"—" }}</span></p>
               <p class="pt-2 text-xs">{% trans "Runtime controls are managed from the appliance Control screen." %}</p>
             </div>
           {% endif %}
@@ -95,8 +91,8 @@
           <div>
             <p class="text-xs uppercase tracking-wide text-[color:var(--text-secondary)]">{% trans "Appliance Profile" %}</p>
             <h2 class="text-xl font-semibold">
-              {% blocktrans with appliance=selected_type|default:"selected appliance"|title %}
-                Inputs for {{ appliance }}
+              {% blocktrans with appliance_label=selected_type|appliance_label %}
+                Inputs for {{ appliance_label }}
               {% endblocktrans %}
             </h2>
           </div>
@@ -120,8 +116,6 @@
 
       <div class="flex items-center gap-3">
         <button type="submit" class="px-5 py-3 rounded-xl bg-[color:var(--accent-primary)] text-white hover:bg-indigo-600">{% trans "Save" %}</button>
-        <a href="{% url 'devices:kitchen_list' %}" class="px-5 py-3 rounded-xl border border-[color:var(--border)]">{% trans "Back" %}</a>
-        <a href="{% url 'home' %}" class="px-5 py-3 rounded-xl border border-[color:var(--border)]">{% trans "Home" %}</a>
       </div>
     </form>
   </div>

@@ -26,7 +26,7 @@ from .appliances import (
 from .forms import DeviceForm, KitchenApplianceForm, SignUpForm, StyledAuthenticationForm
 from .models import Device, UserProfile, AlarmRule, AlarmEvent
 from .serializers import DeviceSerializer
-from .timers import supports_timer, start_timer, update_timer_runtime
+from .timers import supports_timer, start_timer, update_timer_runtime, timer_optional
 from .utils import (
     publish_device_update_like_simulator,
     load_device_metadata,
@@ -137,6 +137,14 @@ class DeviceCreateView(CreateView):
         ctx["current_device_type"] = device_type
         return ctx
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _('Device "%(name)s" created successfully.') % {"name": self.object.name},
+        )
+        return response
+
 
 @method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
 class DeviceUpdateView(UpdateView):
@@ -156,14 +164,20 @@ class DeviceUpdateView(UpdateView):
         # Determine if status changed so we don’t spam MQTT on unrelated edits
         status_changed = "status" in form.changed_data
         response = super().form_valid(form)  # saves self.object
+        messages.success(
+            self.request,
+            _('Device "%(name)s" updated successfully.') % {"name": self.object.name},
+        )
 
         if status_changed:
             device = self.object
             try:
                 publish_device_update_like_simulator(device)
-                messages.success(self.request, "Device updated and MQTT message published.")
             except Exception as e:
-                messages.error(self.request, f"Device saved, but MQTT publish failed: {e}")
+                messages.error(
+                    self.request,
+                    _('Device saved, but MQTT publish failed: %(error)s') % {"error": e},
+                )
         return response
 
     def get_form(self, form_class=None):
@@ -230,6 +244,14 @@ class KitchenApplianceCreateView(KitchenApplianceFormViewMixin, CreateView):
         ctx["is_edit"] = False
         return ctx
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _('Device "%(name)s" created successfully.') % {"name": self.object.name},
+        )
+        return response
+
 
 @method_decorator([login_required, role_required("admin", "operator")], name="dispatch")
 class KitchenApplianceUpdateView(KitchenApplianceFormViewMixin, UpdateView):
@@ -257,6 +279,14 @@ class KitchenApplianceUpdateView(KitchenApplianceFormViewMixin, UpdateView):
         ctx["current_device_type"] = device_type
         return ctx
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _('Device "%(name)s" updated successfully.') % {"name": self.object.name},
+        )
+        return response
+
 
 @login_required
 @role_required("admin", "operator")
@@ -264,7 +294,7 @@ def device_delete(request, pk):
     device = get_object_or_404(Device, pk=pk)
     if request.method == "POST":
         device.delete()
-        messages.success(request, "Device deleted.")
+        messages.success(request, _('Device "%(name)s" removed successfully.') % {"name": device.name})
         return redirect("devices:list")
     # Fallback confirm if someone GETs the URL
     return render(request, "devices/confirm_delete.html", {"device": device})
@@ -281,6 +311,7 @@ def device_control(request, pk):
     meta = load_device_metadata(device)
     spec = APPLIANCE_SPECS.get(device.device_type)
     timer_supported = supports_timer(device.device_type)
+    timer_is_optional = timer_optional(device.device_type) if timer_supported else False
 
     if request.method == "POST":
         update_fields = []
@@ -357,7 +388,6 @@ def device_control(request, pk):
             device.save(update_fields=update_fields)
 
         publish_device_update_like_simulator(device)
-        messages.success(request, "Device control update published to MQTT.")
         return redirect("devices:detail", pk=pk)
 
     timer_context = None
@@ -377,6 +407,7 @@ def device_control(request, pk):
         "meta": meta,
         "status_on": device.status,
         "timer_supported": timer_supported,
+        "timer_optional": timer_is_optional,
         "timer": timer_context,
         "timer_initial_minutes": timer_initial_minutes,
     }
@@ -627,16 +658,19 @@ def save_alarm_rule(request):
 @role_required("admin", "operator")
 @require_GET
 def active_alarms(request):
-    events = (
-        AlarmEvent.objects.filter(is_active=True)
-        .select_related("device", "rule")
-        .order_by("-created_at")
-    )
+    events_qs = AlarmEvent.objects.filter(is_active=True).select_related("device", "rule").order_by("-created_at")
+    alerts = list(events_qs.exclude(severity="info"))
+    notifications = list(events_qs.filter(severity="info"))
+    requested_tab = request.GET.get("tab")
+    if requested_tab not in {"alerts", "notifications"}:
+        requested_tab = "alerts" if alerts else "notifications"
     return render(
         request,
         "devices/monitoring/active_alarms.html",
         {
-            "events": events,
+            "alerts": alerts,
+            "notifications": notifications,
+            "active_tab": requested_tab,
             "user_display": request.user.username,  # for header (same as dashboard)
             "role": getattr(getattr(request.user, "userprofile", None), "role", "visitor"),
         },

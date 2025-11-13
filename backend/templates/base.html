@@ -66,6 +66,46 @@
     right: auto;
     left: 0;
   }
+  .toast-stack {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 60;
+    pointer-events: none;
+  }
+  [dir="rtl"] .toast-stack {
+    right: auto;
+    left: 1.5rem;
+  }
+  .toast-card {
+    min-width: 260px;
+    max-width: 340px;
+    background: rgba(30,30,47,0.95);
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .toast-card[data-tone*="success"] {
+    border-color: var(--accent-success);
+    background: rgba(45,212,191,0.12);
+  }
+  .toast-card[data-tone*="error"] {
+    border-color: var(--accent-error);
+    background: rgba(244,63,94,0.15);
+  }
+  .toast-card[data-tone*="warning"], .toast-card[data-tone*="warn"] {
+    border-color: var(--accent-warning);
+    background: rgba(251,191,36,0.14);
+  }
+  .toast-card[data-tone*="info"] {
+    border-color: var(--accent-info);
+    background: rgba(56,189,248,0.15);
+  }
 </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -73,18 +113,21 @@
   {% if request.user.is_authenticated %}data-logout-url="{% url 'logout' %}"{% endif %}>
   <header class="border-b border-[color:var(--line)]">
     <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3 text-sm rtl:flex-row-reverse">
-        {% with referer=request.META.HTTP_REFERER %}
-          {% if referer %}
-            <a href="{{ referer }}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Back" %}</a>
-          {% else %}
-            <a href="{% if request.user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Back" %}</a>
-          {% endif %}
-        {% endwith %}
+      <div class="flex items-center gap-3 text-sm rtl:flex-row-reverse flex-wrap">
         <a href="{% url 'home' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] font-semibold">{% trans "Home" %}</a>
         {% if request.user.is_authenticated %}
           <a href="{% url 'dashboard' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Dashboard" %}</a>
         {% endif %}
+        <button type="button"
+                class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] flex items-center gap-2"
+                onclick="window.location.reload()">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6"/>
+            <path d="M3 12a9 9 0 0 1 9-9 9 9 0 0 1 7.5 4M3 22v-6h6"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-7.5-4"/>
+          </svg>
+          {% trans "Refresh" %}
+        </button>
       </div>
       <div class="flex flex-wrap items-center gap-3 text-sm text-[color:var(--text-secondary)] justify-end rtl:flex-row-reverse">
         <form method="post" action="{% url 'set_language' %}" class="flex items-center gap-1 text-xs" id="language-switcher">
@@ -123,6 +166,22 @@
   <main class="max-w-6xl mx-auto px-6 py-10">
     {% block content %}{% endblock %}
   </main>
+  {% if messages %}
+  <div id="toast-stack" class="toast-stack">
+    {% for message in messages %}
+      {% with tone=message.tags|default:message.level_tag|default:"info" %}
+      <div class="toast-card animate-fade-in" data-toast data-timeout="10000" data-tone="{{ tone }}">
+        <div class="text-xs font-semibold tracking-wide uppercase text-[color:var(--text-secondary)] mb-1">
+          {{ message.level_tag|default:_("Notice")|title }}
+        </div>
+        <div class="text-sm leading-snug text-white">
+          {{ message }}
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  </div>
+  {% endif %}
   {% if request.user.is_authenticated %}
   <div id="session-timeout-modal"
        class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
@@ -471,5 +530,22 @@
   })();
   </script>
   {% endif %}
+  <script>
+  (function(){
+    const stack = document.getElementById('toast-stack');
+    if (!stack) return;
+    const toasts = stack.querySelectorAll('[data-toast]');
+    toasts.forEach((toast, index) => {
+      const timeout = parseInt(toast.dataset.timeout, 10) || 10000;
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(12px)";
+      }, timeout);
+      setTimeout(() => {
+        toast.remove();
+      }, timeout + 400);
+    });
+  })();
+  </script>
 </body>
 </html>

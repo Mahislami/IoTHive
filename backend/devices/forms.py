@@ -161,8 +161,10 @@ class KitchenApplianceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
+        device_label_map = dict(Device.DEVICE_TYPES)
         self.fields["device_type"].choices = [
-            (key, key.replace("_", " ").title()) for key in APPLIANCE_DEVICE_TYPES
+            (key, device_label_map.get(key, key.replace("_", " ").title()))
+            for key in APPLIANCE_DEVICE_TYPES
         ]
         current_classes = self.fields["device_type"].widget.attrs.get("class", "")
         self.fields["device_type"].widget.attrs["class"] = (current_classes + " capitalize").strip()

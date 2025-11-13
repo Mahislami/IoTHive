@@ -1,11 +1,24 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
+
 # change 'yourapp' to the app where UserProfile lives
 from devices.models import UserProfile
 
 class UserAdminForm(forms.ModelForm):
     role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES, required=True)
+    password1 = forms.CharField(
+        widget=forms.PasswordInput,
+        required=False,
+        label=_("New password"),
+        help_text=_("Leave blank to keep the existing password."),
+    )
+    password2 = forms.CharField(
+        widget=forms.PasswordInput,
+        required=False,
+        label=_("Confirm new password"),
+    )
 
     class Meta:
         model = User
@@ -44,7 +57,23 @@ class UserAdminForm(forms.ModelForm):
                 user.is_staff = False
                 if commit:
                     user.save(update_fields=["is_staff"])
+        new_password = self.cleaned_data.get("password1")
+        if new_password:
+            user.set_password(new_password)
+            if commit:
+                user.save(update_fields=["password"])
         return user
+
+    def clean(self):
+        cleaned = super().clean()
+        pw1 = cleaned.get("password1")
+        pw2 = cleaned.get("password2")
+        if pw1 or pw2:
+            if not pw1 or not pw2:
+                raise forms.ValidationError(_("Please enter the new password twice."))
+            if pw1 != pw2:
+                raise forms.ValidationError(_("The two password fields didn’t match."))
+        return cleaned
 
 class UserCreateForm(forms.ModelForm):
     role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES, required=True)

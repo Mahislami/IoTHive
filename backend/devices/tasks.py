@@ -4,6 +4,7 @@ import json
 import paho.mqtt.publish as publish
 from django.db.models import Exists, OuterRef
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from .models import Device, AlarmRule, AlarmEvent
 from .alarms import evaluate_device_alarms
@@ -84,7 +85,7 @@ def _complete_timer(device, meta, spec):
     timer["status"] = "completed"
     timer["notified"] = True
     meta["timer"] = timer
-    message = f"{device.name} timer finished"
+    message = _('%(device)s timer finished') % {"device": device.name}
     observed = f"{timer.get('duration_minutes')} min" if timer.get("duration_minutes") else ""
     event = AlarmEvent.objects.create(
         device=device,

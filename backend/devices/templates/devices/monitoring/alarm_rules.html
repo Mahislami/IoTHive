@@ -39,7 +39,7 @@
             {% with rules_map|get_item:d.id as r %}
             <div class="border border-[color:var(--border)] rounded-2xl p-5">
               <h4 class="text-md font-semibold">{{ d.name }}</h4>
-              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.get_device_type_display }}</p>
               <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>
@@ -91,7 +91,7 @@
             {% with rules_map|get_item:d.id as r %}
             <div class="border border-[color:var(--border)] rounded-2xl p-5">
               <h4 class="text-md font-semibold">{{ d.name }}</h4>
-              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.get_device_type_display }}</p>
               <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>
@@ -142,7 +142,7 @@
             {% with rules_map|get_item:d.id as r %}
             <div class="border border-[color:var(--border)] rounded-2xl p-5">
               <h4 class="text-md font-semibold">{{ d.name }}</h4>
-              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.device_type }}</p>
+              <p class="text-sm text-[color:var(--text-secondary)] capitalize">{{ d.get_device_type_display }}</p>
               <form method="post" action="{% url 'devices:save_alarm_rule' %}" class="mt-3 space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="device_id" value="{{ d.id }}"/>

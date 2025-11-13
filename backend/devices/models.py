@@ -1,25 +1,59 @@
+import json
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
+from django.core import exceptions
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+try:
+    from django.db.models import JSONField as BuiltinJSONField
+except ImportError:  # Django < 3.1, fall back to simple TextField-based implementation
+    class BuiltinJSONField(models.TextField):
+        description = _("JSON")
+
+        def from_db_value(self, value, expression, connection):
+            if value is None or isinstance(value, (dict, list)):
+                return value
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value
+
+        def to_python(self, value):
+            if value is None or isinstance(value, (dict, list)):
+                return value
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise exceptions.ValidationError(_("Invalid JSON data")) from exc
+
+        def get_prep_value(self, value):
+            if value is None:
+                return value
+            if isinstance(value, (dict, list)):
+                return json.dumps(value, ensure_ascii=False)
+            return value
+
 # Create your models here.
 
 class Device(models.Model):
     DEVICE_TYPES = (
-        ('sensor', 'Sensor'),
-        ('actuator', 'Actuator'),
-        ('light', 'Light'),
-        ('thermostat', 'Thermostat'),
-        ('switch', 'Switch'),
-        ('dishwasher', 'Dishwasher'),
-        ('washing_machine', 'Washing Machine'),
-        ('dryer', 'Dryer'),
-        ('oven', 'Oven'),
-        ('microwave', 'Microwave'),
-        ('kettle', 'Kettle'),
-        ('gas', 'Gas Range'),
-        ('fridge', 'Fridge'),
-        ('tv', 'TV'),
+        ('sensor', _('Sensor')),
+        ('actuator', _('Actuator')),
+        ('light', _('Light')),
+        ('thermostat', _('Thermostat')),
+        ('switch', _('Switch')),
+        ('dishwasher', _('Dishwasher')),
+        ('washing_machine', _('Washing Machine')),
+        ('dryer', _('Dryer')),
+        ('oven', _('Oven')),
+        ('microwave', _('Microwave')),
+        ('kettle', _('Kettle')),
+        ('gas', _('Gas Range')),
+        ('fridge', _('Fridge')),
+        ('tv', _('TV')),
     )
 
     name = models.CharField(max_length=255)
@@ -27,7 +61,7 @@ class Device(models.Model):
     status = models.BooleanField(default=False)  # Example: On/Off
     topic = models.CharField(max_length=255, unique=True)  # MQTT topic
     created_at = models.DateTimeField(auto_now_add=True)
-    metadata = models.JSONField(blank=True, null=True)  # per-device extra config/state
+    metadata = BuiltinJSONField(blank=True, null=True)  # per-device extra config/state
     power_rating_watts = models.PositiveIntegerField(default=0)
     current_power_watts = models.FloatField(default=0)
     target_temperature = models.FloatField(null=True, blank=True)
@@ -39,9 +73,9 @@ class Device(models.Model):
     
 class UserProfile(models.Model):
     ROLE_CHOICES = [
-        ('admin', 'Admin'),
-        ('operator', 'Operator'),
-        ('visitor', 'Visitor'),
+        ('admin', _('Admin')),
+        ('operator', _('Operator')),
+        ('visitor', _('Visitor')),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -61,7 +95,15 @@ class AlarmRule(models.Model):
     # boolean (switch/light/actuator)
     expected_state = models.BooleanField(null=True, blank=True)
 
-    severity = models.CharField(max_length=10, choices=[('info','Info'),('warn','Warning'),('crit','Critical')], default='warn')
+    severity = models.CharField(
+        max_length=10,
+        choices=[
+            ('info', _('Info')),
+            ('warn', _('Warning')),
+            ('crit', _('Critical')),
+        ],
+        default='warn',
+    )
     note = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -73,7 +115,15 @@ class AlarmEvent(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='alarm_events')
     rule = models.ForeignKey(AlarmRule, on_delete=models.SET_NULL, null=True, related_name='events')
     message = models.CharField(max_length=240)
-    severity = models.CharField(max_length=10, choices=[('info','Info'),('warn','Warning'),('crit','Critical')], default='warn')
+    severity = models.CharField(
+        max_length=10,
+        choices=[
+            ('info', _('Info')),
+            ('warn', _('Warning')),
+            ('crit', _('Critical')),
+        ],
+        default='warn',
+    )
     observed_value = models.CharField(max_length=64, blank=True, default='')
     is_active = models.BooleanField(default=True)
     acknowledged = models.BooleanField(default=False)

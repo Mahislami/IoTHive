@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n extras %}
 {% block title %}
   {% blocktrans with device_name=device.name %}Control {{ device_name }}{% endblocktrans %}
 {% endblock %}
@@ -50,7 +50,7 @@
         <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Mode" %}</label>
         <select name="mode" class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
           {% for mode in spec.modes %}
-            <option value="{{ mode }}" {% if device.mode == mode %}selected{% endif %}>{{ mode|title }}</option>
+            <option value="{{ mode }}" {% if device.mode == mode %}selected{% endif %}>{{ mode|appliance_label }}</option>
           {% endfor %}
         </select>
       </div>
@@ -62,7 +62,7 @@
           <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Cycle" %}</label>
           <select name="cycle" class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
             {% for cycle in spec.cycles %}
-              <option value="{{ cycle }}" {% if meta.cycle == cycle %}selected{% endif %}>{{ cycle|title }}</option>
+              <option value="{{ cycle }}" {% if meta.cycle == cycle %}selected{% endif %}>{{ cycle|appliance_label }}</option>
             {% endfor %}
           </select>
         </div>
@@ -83,30 +83,31 @@
 
       {% if timer_supported %}
       <div class="border border-[color:var(--border)] rounded-xl p-4 space-y-3">
-        <div>
-          <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Timer Duration (minutes)" %}</label>
-          <input name="timer_minutes"
-                 type="number"
-                 min="1"
-                 max="240"
-                 value="{{ timer_initial_minutes }}"
-                 class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <button type="submit"
-                  name="timer_action"
-                  value="start"
-                  class="px-3 py-2 bg-[color:var(--accent-primary)] text-white rounded-lg">
-            {% trans "Start Timer" %}
-          </button>
-          {% if timer %}
-          <button type="submit"
-                  name="timer_action"
-                  value="cancel"
-                  class="px-3 py-2 border border-[color:var(--border)] rounded-lg">
-            {% trans "Cancel Timer" %}
-          </button>
-          {% endif %}
+        {% if timer_optional %}
+        <p class="text-xs text-[color:var(--text-secondary)]">
+          {% trans "Timer is optional for this appliance; leave it unset if you just want manual control." %}
+        </p>
+        {% endif %}
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Timer Duration (minutes)" %}</label>
+            <input name="timer_minutes"
+                   type="number"
+                   min="1"
+                   max="240"
+                   value="{{ timer_initial_minutes }}"
+                   class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
+            <p class="text-xs text-[color:var(--text-secondary)] mt-1">{% trans "Applies when the timer action below is set to start/update." %}</p>
+          </div>
+          <div>
+            <label class="text-sm text-[color:var(--text-secondary)] mb-1 block">{% trans "Timer Action" %}</label>
+            <select name="timer_action"
+                    class="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--bg-base)]">
+              <option value="">{% trans "No change" %}</option>
+              <option value="start">{% trans "Start / update timer (applies on Publish Controls)" %}</option>
+              <option value="cancel">{% trans "Cancel timer (applies on Publish Controls)" %}</option>
+            </select>
+          </div>
         </div>
         {% if timer %}
         <div class="text-sm space-y-1">
@@ -127,8 +128,6 @@
 
       <div class="pt-4 border-t border-[color:var(--border)] flex items-center gap-3">
         <button type="submit" class="px-4 py-2 bg-[color:var(--accent-primary)] rounded-lg text-white">{% trans "Publish Controls" %}</button>
-        <a href="{% url 'devices:detail' device.pk %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Back" %}</a>
-        <a href="{% url 'home' %}" class="px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Home" %}</a>
       </div>
     </form>
   </div>

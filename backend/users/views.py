@@ -7,6 +7,7 @@ from django.views.generic import UpdateView
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.utils.translation import gettext as _
 from django.views.generic import CreateView
 from .forms import UserCreateForm
 
@@ -56,16 +57,24 @@ class UserUpdateView(UpdateView):
     context_object_name = "u"
     success_url = reverse_lazy("users:list")
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _('User "%(username)s" updated successfully.') % {"username": self.object.username},
+        )
+        return response
+
 @login_required
 @role_required("admin")
 def user_delete(request, pk):
     u = get_object_or_404(User, pk=pk)
     if request.method == "POST":
         if u == request.user:
-            messages.error(request, "You can’t delete your own account.")
+            messages.error(request, _("You can’t delete your own account."))
             return redirect("users:edit", pk=pk)
         u.delete()
-        messages.success(request, "User deleted.")
+        messages.success(request, _('User "%(username)s" removed successfully.') % {"username": u.username})
         return redirect("users:list")
     # fallback confirm page if someone GETs this URL
     return render(request, "users/confirm_delete.html", {"u": u})
@@ -75,3 +84,11 @@ class UserCreateView(CreateView):
     form_class = UserCreateForm
     template_name = "users/create.html"
     success_url = reverse_lazy("users:list")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request,
+            _('User "%(username)s" created successfully.') % {"username": self.object.username},
+        )
+        return response

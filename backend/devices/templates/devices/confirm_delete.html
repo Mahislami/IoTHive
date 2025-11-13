@@ -9,7 +9,6 @@
     <form method="post">
       {% csrf_token %}
       <button class="px-4 py-2 bg-[color:var(--accent-error)] text-white rounded-lg">{% trans "Delete" %}</button>
-      <a href="javascript:history.back()" class="ml-3 px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Back" %}</a>
       <a href="{% url 'home' %}" class="ml-3 px-4 py-2 border border-[color:var(--border)] rounded-lg">{% trans "Home" %}</a>
     </form>
   </div>
