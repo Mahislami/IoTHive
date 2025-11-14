@@ -1,4 +1,6 @@
 import json
+import os
+import ssl
 import paho.mqtt.publish as mqtt_publish
 
 
@@ -21,8 +23,26 @@ def save_device_metadata(device, meta, *, update_fields=("metadata",)):
     device.metadata = meta
     device.save(update_fields=list(update_fields))
 
-MQTT_BROKER = 'mosquitto-broker'
-MQTT_PORT = 1883
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "mosquitto-broker")
+MQTT_PORT = int(os.environ.get("MQTT_PORT", "8883"))
+MQTT_TLS_ENABLED = os.environ.get("MQTT_TLS_ENABLED", "true").lower() not in {"0", "false", "no"}
+MQTT_CA_CERT = os.environ.get("MQTT_CA_CERT", "/certs/ca.crt")
+MQTT_CLIENT_CERT = os.environ.get("MQTT_CLIENT_CERT", "/certs/backend-client.crt")
+MQTT_CLIENT_KEY = os.environ.get("MQTT_CLIENT_KEY", "/certs/backend-client.key")
+
+MQTT_TLS_CONFIG = None
+if MQTT_TLS_ENABLED:
+    MQTT_TLS_CONFIG = {
+        "ca_certs": MQTT_CA_CERT,
+        "certfile": MQTT_CLIENT_CERT,
+        "keyfile": MQTT_CLIENT_KEY,
+        "tls_version": ssl.PROTOCOL_TLSv1_2,
+        "cert_reqs": ssl.CERT_REQUIRED,
+    }
+
+MQTT_PUBLISH_KWARGS = {}
+if MQTT_TLS_CONFIG:
+    MQTT_PUBLISH_KWARGS["tls"] = MQTT_TLS_CONFIG
 
 
 def publish_device_update_like_simulator(device, override_status=None, extra_payload=None):
@@ -117,4 +137,5 @@ def publish_device_update_like_simulator(device, override_status=None, extra_pay
         json.dumps(payload),
         hostname=MQTT_BROKER,
         port=MQTT_PORT,
+        **MQTT_PUBLISH_KWARGS,
     )

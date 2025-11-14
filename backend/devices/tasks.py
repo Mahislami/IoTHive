@@ -8,7 +8,13 @@ from django.utils.translation import gettext as _
 
 from .models import Device, AlarmRule, AlarmEvent
 from .alarms import evaluate_device_alarms
-from .utils import load_device_metadata, save_device_metadata
+from .utils import (
+    load_device_metadata,
+    save_device_metadata,
+    MQTT_BROKER,
+    MQTT_PORT,
+    MQTT_PUBLISH_KWARGS,
+)
 from .appliances import (
     APPLIANCE_SPECS,
     AMBIENT_TEMPERATURE,
@@ -16,10 +22,6 @@ from .appliances import (
 )
 from .timers import supports_timer, update_timer_runtime
 from .power import compute_appliance_draw
-
-# --- MQTT config (same as before) ---
-MQTT_BROKER = 'mosquitto-broker'
-MQTT_PORT = 1883
 
 # Actuator bounds
 ROOM_WIDTH = 10
@@ -208,7 +210,13 @@ def _tick_appliance(device):
     return meta, draw
 
 def _pub(topic, payload_dict):
-    publish.single(topic, json.dumps(payload_dict), hostname=MQTT_BROKER, port=MQTT_PORT)
+    publish.single(
+        topic,
+        json.dumps(payload_dict),
+        hostname=MQTT_BROKER,
+        port=MQTT_PORT,
+        **MQTT_PUBLISH_KWARGS,
+    )
 
 def _topic_for(device):
     return device.topic or f"iot/sensors/{device.device_type}/{device.id}"

@@ -1,0 +1,10 @@
+# Ignore generated certificates/keys; keep helper docs/scripts tracked.
+*.crt
+*.csr
+*.key
+*.pem
+*.srl
+*.p12
+*.der
+!README.md
+!generate-certs.sh

@@ -1,6 +1,13 @@
 version: "3.9"
 
 services:
+  mqtt-certs-init:
+    image: alpine:3.19
+    command: /bin/sh -c "apk add --no-cache bash openssl && cd /certs && ./generate-certs.sh"
+    volumes:
+      - ./mosquitto/certs:/certs
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -9,10 +16,23 @@ services:
       - .env
     volumes:
       - ./backend:/app
+      - ./mosquitto/certs:/certs
+      - ./mosquitto/config:/mosquitto-config
+    environment:
+      MQTT_BROKER: mosquitto-broker
+      MQTT_PORT: 8883
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_CLIENT_CERT: /certs/backend-client.crt
+      MQTT_CLIENT_KEY: /certs/backend-client.key
+      MQTT_CERTS_DIR: /certs
+      MOSQUITTO_ACL_PATH: /mosquitto-config/acl
+      MQTT_CERT_GENERATE_SCRIPT: /certs/generate-certs.sh
+      MQTT_DEVICE_CERT_PREFIX: device
     ports:
       - "8000:8000"
     depends_on:
       - redis
+      - mqtt-certs-init
       - mosquitto
     networks:
       - iothive-network
@@ -30,9 +50,22 @@ services:
     command: celery -A iothive worker --loglevel=info
     volumes:
       - ./backend:/app
+      - ./mosquitto/certs:/certs
+      - ./mosquitto/config:/mosquitto-config
+    environment:
+      MQTT_BROKER: mosquitto-broker
+      MQTT_PORT: 8883
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_CLIENT_CERT: /certs/backend-client.crt
+      MQTT_CLIENT_KEY: /certs/backend-client.key
+      MQTT_CERTS_DIR: /certs
+      MOSQUITTO_ACL_PATH: /mosquitto-config/acl
+      MQTT_CERT_GENERATE_SCRIPT: /certs/generate-certs.sh
+      MQTT_DEVICE_CERT_PREFIX: device
     depends_on:
       - backend
       - redis
+      - mqtt-certs-init
       - mosquitto
     networks:
       - iothive-network
@@ -44,9 +77,22 @@ services:
     command: celery -A iothive beat -l info
     volumes:
       - ./backend:/app
+      - ./mosquitto/certs:/certs
+      - ./mosquitto/config:/mosquitto-config
+    environment:
+      MQTT_BROKER: mosquitto-broker
+      MQTT_PORT: 8883
+      MQTT_CA_CERT: /certs/ca.crt
+      MQTT_CLIENT_CERT: /certs/backend-client.crt
+      MQTT_CLIENT_KEY: /certs/backend-client.key
+      MQTT_CERTS_DIR: /certs
+      MOSQUITTO_ACL_PATH: /mosquitto-config/acl
+      MQTT_CERT_GENERATE_SCRIPT: /certs/generate-certs.sh
+      MQTT_DEVICE_CERT_PREFIX: device
     depends_on:
       - backend
       - redis
+      - mqtt-certs-init
     networks:
       - iothive-network
 
@@ -54,12 +100,16 @@ services:
     image: eclipse-mosquitto:2
     container_name: mosquitto-broker
     ports:
-      - "1883:1883"
-      - "9001:9001"
+      - "8883:8883"
+      - "9883:9883"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/config/acl:/mosquitto/config/acl:ro
+      - ./mosquitto/certs:/mosquitto/certs:ro
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
+    depends_on:
+      - mqtt-certs-init
     networks:
       - iothive-network
 
@@ -70,10 +120,14 @@ services:
       - mosquitto
     stdin_open: true
     tty: true
+    volumes:
+      - ./mosquitto/certs:/certs:ro
     networks:
       - iothive-network
     profiles:
       - tools
+    depends_on:
+      - mqtt-certs-init
 
   influxdb:
     image: influxdb:2.7
@@ -92,9 +146,11 @@ services:
     container_name: telegraf
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./mosquitto/certs:/etc/telegraf/certs:ro
     networks:
       - iothive-network
     depends_on:
+      - mqtt-certs-init
       - mosquitto
       - influxdb
 

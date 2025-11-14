@@ -1,0 +1,119 @@
+# Managed by IoTHive – this file is auto-generated. Manual edits will be overwritten.
+
+user telegraf
+topic read iot/#
+topic read home/#
+
+user backend-service
+topic write iot/#
+topic write home/#
+topic write iot/power/#
+
+user generic-mqtt-client
+topic readwrite iot/#
+topic readwrite home/#
+
+user device-1
+topic readwrite home/livingroom/light
+topic readwrite home/livingroom/light/#
+topic write iot/power/light/1
+
+user device-2
+topic readwrite home/livingroom/light2
+topic readwrite home/livingroom/light2/#
+topic write iot/power/light/2
+
+user device-3
+topic readwrite home/livingroom/sensor2
+topic readwrite home/livingroom/sensor2/#
+topic write iot/power/sensor/3
+
+user device-4
+topic readwrite home/livingroom/thermostat
+topic readwrite home/livingroom/thermostat/#
+topic write iot/power/thermostat/4
+
+user device-5
+topic readwrite home/livingroom/switch
+topic readwrite home/livingroom/switch/#
+topic write iot/power/switch/5
+
+user device-6
+topic readwrite home/livingroom/actuator
+topic readwrite home/livingroom/actuator/#
+topic write iot/power/actuator/6
+
+user device-7
+topic readwrite home/livingroom/actuator2
+topic readwrite home/livingroom/actuator2/#
+topic write iot/power/actuator/7
+
+user device-8
+topic readwrite home/livingroom/light3
+topic readwrite home/livingroom/light3/#
+topic write iot/power/light/8
+
+user device-10
+topic readwrite home/livingroom/light5
+topic readwrite home/livingroom/light5/#
+topic write iot/power/light/10
+
+user device-11
+topic readwrite home/livingroom/light6
+topic readwrite home/livingroom/light6/#
+topic write iot/power/light/11
+
+user device-12
+topic readwrite home/livingroom/thermostat29
+topic readwrite home/livingroom/thermostat29/#
+topic write iot/power/thermostat/12
+
+user device-13
+topic readwrite home/livingroom/switch2
+topic readwrite home/livingroom/switch2/#
+topic write iot/power/switch/13
+
+user device-14
+topic readwrite home/livingroom/switch3
+topic readwrite home/livingroom/switch3/#
+topic write iot/power/switch/14
+
+user device-15
+topic readwrite home/livingroom/fridge
+topic readwrite home/livingroom/fridge/#
+topic write iot/power/sensor/15
+
+user device-16
+topic readwrite /home/livingroom/Kettle
+topic readwrite /home/livingroom/Kettle/#
+topic write iot/power/kettle/16
+
+user device-17
+topic readwrite home/livingroom/fridge2
+topic readwrite home/livingroom/fridge2/#
+topic write iot/power/fridge/17
+
+user device-18
+topic readwrite home/livingroom/tv
+topic readwrite home/livingroom/tv/#
+topic write iot/power/tv/18
+
+user device-21
+topic readwrite home/livingroom/washingmachine
+topic readwrite home/livingroom/washingmachine/#
+topic write iot/power/washing_machine/21
+
+user device-22
+topic readwrite home/livingroom/Dishwasher
+topic readwrite home/livingroom/Dishwasher/#
+topic write iot/power/dishwasher/22
+
+user device-23
+topic readwrite home/livingroom/Dryer
+topic readwrite home/livingroom/Dryer/#
+topic write iot/power/dryer/23
+
+user device-24
+topic readwrite home/livingroom/Oven
+topic readwrite home/livingroom/Oven/#
+topic write iot/power/oven/24

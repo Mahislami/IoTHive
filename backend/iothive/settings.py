@@ -22,6 +22,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 LOGIN_REDIRECT_URL = '/dashboard/'
 GRAFANA_PUBLIC_URL = os.environ.get("GRAFANA_PUBLIC_URL", "").strip()
 GRAFANA_INTERNAL_URL = os.environ.get("GRAFANA_INTERNAL_URL", "http://grafana:3000/grafana/").strip()
+MQTT_CERTS_DIR = os.environ.get("MQTT_CERTS_DIR", "/certs")
+MOSQUITTO_ACL_PATH = os.environ.get("MOSQUITTO_ACL_PATH", "/mosquitto-config/acl")
+MQTT_CERT_GENERATE_SCRIPT = os.environ.get("MQTT_CERT_GENERATE_SCRIPT", "/certs/generate-certs.sh")
+MQTT_DEVICE_CERT_PREFIX = os.environ.get("MQTT_DEVICE_CERT_PREFIX", "device")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
