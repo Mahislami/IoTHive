@@ -20,8 +20,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CORS_ALLOW_ALL_ORIGINS = True
 LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_URL = '/'
 GRAFANA_PUBLIC_URL = os.environ.get("GRAFANA_PUBLIC_URL", "").strip()
-GRAFANA_INTERNAL_URL = os.environ.get("GRAFANA_INTERNAL_URL", "http://grafana:3000/grafana/").strip()
+GRAFANA_INTERNAL_URL = os.environ.get("GRAFANA_INTERNAL_URL", "http://grafana:3000/").strip()
 MQTT_CERTS_DIR = os.environ.get("MQTT_CERTS_DIR", "/certs")
 MOSQUITTO_ACL_PATH = os.environ.get("MOSQUITTO_ACL_PATH", "/mosquitto-config/acl")
 MQTT_CERT_GENERATE_SCRIPT = os.environ.get("MQTT_CERT_GENERATE_SCRIPT", "/certs/generate-certs.sh")
@@ -42,6 +43,7 @@ SECRET_KEY = 'django-insecure--ic#k@n72#g_)@%)19_lg5%vo#6qmejof3_1vb&2xb-(48v%we
 DEBUG = True
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "https://localhost,http://localhost").split(",") if o.strip()]
 
 
 # Application definition
@@ -157,5 +159,5 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session configuration: 10-minute sliding window with keep-alive support
-SESSION_COOKIE_AGE = 600  # seconds
+SESSION_COOKIE_AGE = 300  # seconds (5 minutes)
 SESSION_SAVE_EVERY_REQUEST = True

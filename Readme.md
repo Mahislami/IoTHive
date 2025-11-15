@@ -92,6 +92,19 @@ This creates a demo administrator (`demo_admin` / `admin123`) that you can use t
 If you want fresh telemetry, start the Celery worker (step above) or trigger `simulate_device_activity` again once containers are running.
 ---
 
+## 🔐 HTTPS Access
+
+The stack now auto-generates a self-signed certificate in `certs/https` via the `https-certs-init` helper container. When you run `docker-compose up`, the script creates `iothive.crt` and `iothive.key`, mounts them into both **nginx** and **InfluxDB**, and forces the public endpoints through HTTPS on port `443`.
+
+To avoid browser warnings, import `certs/https/iothive.crt` into your workstation's trust store (Keychain Access on macOS, certmgr on Windows, or `/usr/local/share/ca-certificates` on Linux). Once trusted, you can access:
+
+* https://localhost/ for the Django backend
+* https://grafana.localhost/ for Grafana (served from its own hostname)
+* https://localhost/influxdb/ for the InfluxDB UI/API (Basic Auth + token)
+
+Telegraf now communicates with InfluxDB over `https://influxdb:8086` and trusts the same certificate, so metrics continue to flow without disabling TLS verification.
+---
+
 ## ⚙️ API Endpoints
 
 | Method | Endpoint           | Description                 |

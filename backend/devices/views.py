@@ -454,7 +454,8 @@ def dashboard_view(request):
             "href": grafana_dashboards_url,
             "desc": _("View metrics and charts"),
             "icon": "activity",
-            "requires_grafana_login": True,
+            "requires_grafana_login": False,
+            "new_tab": True,
         },
         {
             "key": "power_grafana",

@@ -41,7 +41,6 @@ def keep_session_alive(request):
     })
 
 
-@login_required
 def logout_view(request):
     """Explicit logout endpoint that always redirects home."""
     logout(request)

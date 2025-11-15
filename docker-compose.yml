@@ -8,6 +8,13 @@ services:
       - ./mosquitto/certs:/certs
     restart: "no"
 
+  https-certs-init:
+    image: alpine:3.19
+    command: /bin/sh -c "apk add --no-cache openssl && cd /certs && ./generate-certs.sh"
+    volumes:
+      - ./certs/https:/certs
+    restart: "no"
+
   backend:
     build:
       context: ./backend
@@ -134,23 +141,48 @@ services:
     container_name: influxdb
     env_file:
       - .env
+    environment:
+      INFLUXD_TLS_CERT: /etc/ssl/influxdb/iothive.crt
+      INFLUXD_TLS_KEY: /etc/ssl/influxdb/iothive.key
+    entrypoint:
+      - /usr/local/bin/wait-for-files.sh
+      - /etc/ssl/influxdb/iothive.crt
+      - /etc/ssl/influxdb/iothive.key
+      - --
+      - /entrypoint.sh
+    command:
+      - influxd
     ports:
       - "8086:8086"
     volumes:
       - influxdb_data:/var/lib/influxdb2
+      - ./certs/https:/etc/ssl/influxdb:ro
+      - ./scripts/wait-for-files.sh:/usr/local/bin/wait-for-files.sh:ro
     networks:
       - iothive-network
+    depends_on:
+      - https-certs-init
 
   telegraf:
     image: telegraf:1.29
     container_name: telegraf
+    entrypoint:
+      - /usr/local/bin/wait-for-files.sh
+      - /etc/telegraf/https-certs/iothive.crt
+      - --
+      - /entrypoint.sh
+    command:
+      - telegraf
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - ./mosquitto/certs:/etc/telegraf/certs:ro
+      - ./certs/https:/etc/telegraf/https-certs:ro
+      - ./scripts/wait-for-files.sh:/usr/local/bin/wait-for-files.sh:ro
     networks:
       - iothive-network
     depends_on:
       - mqtt-certs-init
+      - https-certs-init
       - mosquitto
       - influxdb
 
@@ -175,12 +207,26 @@ services:
       - backend
       - grafana
       - influxdb
+      - https-certs-init
+    entrypoint:
+      - /usr/local/bin/wait-for-files.sh
+      - /etc/nginx/certs/iothive.crt
+      - /etc/nginx/certs/iothive.key
+      - --
+      - /docker-entrypoint.sh
+    command:
+      - nginx
+      - -g
+      - daemon off;
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/.htpasswd-grafana:/etc/nginx/.htpasswd-grafana:ro
       - ./nginx/.htpasswd-influxdb:/etc/nginx/.htpasswd-influxdb:ro
+      - ./certs/https:/etc/nginx/certs:ro
+      - ./scripts/wait-for-files.sh:/usr/local/bin/wait-for-files.sh:ro
     networks:
       - iothive-network
 
