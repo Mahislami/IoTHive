@@ -123,8 +123,6 @@ services:
   client:
     build: ./mqtt-client
     container_name: mqtt-client
-    depends_on:
-      - mosquitto
     stdin_open: true
     tty: true
     volumes:
@@ -134,6 +132,7 @@ services:
     profiles:
       - tools
     depends_on:
+      - mosquitto
       - mqtt-certs-init
 
   influxdb:
