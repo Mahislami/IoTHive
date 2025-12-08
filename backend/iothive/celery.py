@@ -37,4 +37,10 @@ app.conf.beat_schedule = {
     "task": "devices.evaluate_alarms_task",
     "schedule": 10.0,  # seconds; can also use timedelta(seconds=10)
     },
+
+    # Refresh recommendations periodically so the UI stays populated without manual commands.
+    "generate-recommendations-hourly": {
+        "task": "devices.generate_recommendations_task",
+        "schedule": crontab(minute=0),  # every hour
+    },
 }

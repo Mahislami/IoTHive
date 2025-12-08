@@ -6,3 +6,5 @@ celery
 redis
 django-cors-headers
 requests
+influxdb-client
+scikit-learn

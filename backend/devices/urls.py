@@ -4,7 +4,8 @@ from . import views
 from django.urls import path
 from .views import DeviceListView, DeviceDetailView, DeviceCreateView, DeviceUpdateView, \
     device_delete, device_control, dashboard_view, alarm_rules, save_alarm_rule, active_alarms, ack_alarm, clear_alarm, \
-    KitchenApplianceListView, KitchenApplianceCreateView, KitchenApplianceUpdateView
+    KitchenApplianceListView, KitchenApplianceCreateView, KitchenApplianceUpdateView, \
+    recommendations_view, acknowledge_recommendation, implement_recommendation, dismiss_recommendation
 from .views import (
     DeviceListView, DeviceDetailView,
     UserListView, UserDetailView,
@@ -31,5 +32,9 @@ urlpatterns = [
     path('alarms/', active_alarms, name='active_alarms'),
     path('alarms/<int:event_id>/ack/', ack_alarm, name='ack_alarm'),
     path('alarms/<int:event_id>/clear/', clear_alarm, name='clear_alarm'),
+    path('recommendations/', recommendations_view, name='recommendations'),
+    path('recommendations/<int:rec_id>/ack/', acknowledge_recommendation, name='ack_recommendation'),
+    path('recommendations/<int:rec_id>/implement/', implement_recommendation, name='implement_recommendation'),
+    path('recommendations/<int:rec_id>/dismiss/', dismiss_recommendation, name='dismiss_recommendation'),
     
 ]

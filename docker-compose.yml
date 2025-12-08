@@ -1,5 +1,11 @@
 version: "3.9"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   mqtt-certs-init:
     image: alpine:3.19
@@ -7,6 +13,8 @@ services:
     volumes:
       - ./mosquitto/certs:/certs
     restart: "no"
+    logging:
+      <<: *default-logging
 
   https-certs-init:
     image: alpine:3.19
@@ -14,6 +22,8 @@ services:
     volumes:
       - ./certs/https:/certs
     restart: "no"
+    logging:
+      <<: *default-logging
 
   backend:
     build:
@@ -35,21 +45,30 @@ services:
       MOSQUITTO_ACL_PATH: /mosquitto-config/acl
       MQTT_CERT_GENERATE_SCRIPT: /certs/generate-certs.sh
       MQTT_DEVICE_CERT_PREFIX: device
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       - redis
       - mqtt-certs-init
       - mosquitto
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
   redis:
     image: redis:7
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
   celery:
     build:
@@ -76,6 +95,8 @@ services:
       - mosquitto
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
   # NEW: Celery Beat scheduler (triggers periodic tasks every 10s)
   celery-beat:
@@ -102,13 +123,15 @@ services:
       - mqtt-certs-init
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: mosquitto-broker
-    ports:
-      - "8883:8883"
-      - "9883:9883"
+    expose:
+      - "8883"
+      - "9883"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mosquitto/config/acl:/mosquitto/config/acl:ro
@@ -119,6 +142,8 @@ services:
       - mqtt-certs-init
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
   client:
     build: ./mqtt-client
@@ -134,6 +159,8 @@ services:
     depends_on:
       - mosquitto
       - mqtt-certs-init
+    logging:
+      <<: *default-logging
 
   influxdb:
     image: influxdb:2.7
@@ -151,8 +178,8 @@ services:
       - /entrypoint.sh
     command:
       - influxd
-    ports:
-      - "8086:8086"
+    expose:
+      - "8086"
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - ./certs/https:/etc/ssl/influxdb:ro
@@ -161,6 +188,8 @@ services:
       - iothive-network
     depends_on:
       - https-certs-init
+    logging:
+      <<: *default-logging
 
   telegraf:
     image: telegraf:1.29
@@ -184,20 +213,24 @@ services:
       - https-certs-init
       - mosquitto
       - influxdb
+    logging:
+      <<: *default-logging
 
   grafana:
     image: grafana/grafana:10.2.3
     container_name: grafana
     env_file:
       - .env
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
       - iothive-network
     depends_on:
       - influxdb
+    logging:
+      <<: *default-logging
 
   nginx:
     image: nginx:1.25
@@ -228,6 +261,8 @@ services:
       - ./scripts/wait-for-files.sh:/usr/local/bin/wait-for-files.sh:ro
     networks:
       - iothive-network
+    logging:
+      <<: *default-logging
 
 #  frontend:
 #    build:

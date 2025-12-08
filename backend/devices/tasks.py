@@ -20,6 +20,8 @@ from .appliances import (
     AMBIENT_TEMPERATURE,
     get_appliance_spec,
 )
+from .recommendations import generate_recommendations, build_heuristic_inputs
+from .recommendations_ml import generate_ml_inputs
 from .timers import supports_timer, update_timer_runtime
 from .power import compute_appliance_draw
 
@@ -535,3 +537,18 @@ def _evaluate_all():
         for device in batch:
             evaluate_device_alarms(device)
         start += batch_size
+
+
+@shared_task(name="devices.generate_recommendations_task", acks_late=True, time_limit=60, soft_time_limit=45)
+def generate_recommendations_task():
+    """
+    Heuristic recommendation builder.
+    Keeps existing recommendations in sync with current device state.
+    """
+    devices = Device.objects.all()
+    ml_inputs = generate_ml_inputs(devices)
+    # For devices without data, fall back to heuristics
+    heuristic_inputs = build_heuristic_inputs(devices)
+    # Prefer ML by prepending; upsert will update same titles if they match
+    all_inputs = ml_inputs + heuristic_inputs
+    generate_recommendations(devices=devices, extra_inputs=all_inputs)

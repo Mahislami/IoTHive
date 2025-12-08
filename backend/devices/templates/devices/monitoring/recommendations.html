@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Recommendations" %}{% endblock %}
+{% block extra_head %}
+<style>
+  .sev-info { background: rgba(56,189,248,.15); border-color: var(--accent-info); }
+  .sev-warn { background: rgba(251,191,36,.12); border-color: var(--accent-warning); }
+  .sev-crit { background: rgba(244,63,94,.12); border-color: var(--accent-error); }
+  .rec-tabs button {
+    transition: background .2s ease, color .2s ease, border .2s ease;
+  }
+  .rec-tabs button[aria-selected="true"] {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 0 1px var(--accent-primary);
+  }
+  .cat-btn{transition:all .2s ease;}
+  .cat-btn.active{border-color:var(--accent-primary);background:var(--accent-primary);color:#fff;}
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-6 mb-8 animate-fade-in">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold mb-1">{% trans "Recommendations" %}</h2>
+        <p class="text-[color:var(--text-secondary)]">{% trans "AI-assisted suggestions for alarms and device controls." %}</p>
+      </div>
+      <div class="flex items-center gap-3 text-sm text-[color:var(--text-secondary)]">
+        <span class="px-2 py-1 rounded-md border border-[color:var(--border)]">
+          {% trans "Role" %}: <span class="font-medium capitalize">{{ role }}</span>
+        </span>
+        <a href="{% url 'devices:alarm_rules' %}" class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">
+          {% trans "Alarm Rules" %}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-4" data-tab-root data-initial-tab="{{ active_tab }}">
+    <div class="rec-tabs flex flex-wrap gap-3">
+      <button type="button"
+              class="px-4 py-2 rounded-xl border border-[color:var(--border)] text-sm"
+              data-tab-button="alerts"
+              aria-selected="{% if active_tab == 'alerts' %}true{% else %}false{% endif %}">
+        {% trans "Alerts" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ alerts|length }}</span>
+      </button>
+      <button type="button"
+              class="px-4 py-2 rounded-xl border border-[color:var(--border)] text-sm"
+              data-tab-button="notifications"
+              aria-selected="{% if active_tab == 'notifications' %}true{% else %}false{% endif %}">
+        {% trans "Notifications" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ notifications|length }}</span>
+      </button>
+    </div>
+    <div>
+      <div data-tab-panel="alerts" class="{% if active_tab != 'alerts' %}hidden{% endif %}">
+        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-cat-key="alerts" data-default-cat="{{ alerts_default_cat }}">
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">
+              {% trans "Numeric (Sensors, Thermostats)" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">
+              {% trans "Binary (Switches, Lights, Actuators)" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">
+              {% trans "Kitchen Appliances" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">
+              {% trans "Other devices" %}
+            </button>
+          </div>
+          <div class="space-y-4">
+            <div data-cat-panel="numeric" class="hidden">
+              {% if alerts_grouped.numeric %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.numeric %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="binary" class="hidden">
+              {% if alerts_grouped.binary %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.binary %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="appliance" class="hidden">
+              {% if alerts_grouped.appliance %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.appliance %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="other" class="hidden">
+              {% if alerts_grouped.other %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.other %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            {% if not alerts %}
+              <div class="text-[color:var(--text-secondary)]">{% trans "No high-priority suggestions right now." %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div data-tab-panel="notifications" class="{% if active_tab != 'notifications' %}hidden{% endif %}">
+        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-cat-key="notifications" data-default-cat="{{ notifications_default_cat }}">
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">
+              {% trans "Numeric (Sensors, Thermostats)" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">
+              {% trans "Binary (Switches, Lights, Actuators)" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">
+              {% trans "Kitchen Appliances" %}
+            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">
+              {% trans "Other devices" %}
+            </button>
+          </div>
+          <div class="space-y-4">
+            <div data-cat-panel="numeric" class="hidden">
+              {% if notifications_grouped.numeric %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.numeric %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="binary" class="hidden">
+              {% if notifications_grouped.binary %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.binary %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="appliance" class="hidden">
+              {% if notifications_grouped.appliance %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.appliance %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            <div data-cat-panel="other" class="hidden">
+              {% if notifications_grouped.other %}
+                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.other %}
+              {% else %}
+                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
+              {% endif %}
+            </div>
+            {% if not notifications %}
+              <div class="text-[color:var(--text-secondary)]">{% trans "No informational suggestions at the moment." %}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const tabRoot = document.querySelector('[data-tab-root]');
+      if (!tabRoot) return;
+      const buttons = tabRoot.querySelectorAll('[data-tab-button]');
+      const panels = tabRoot.querySelectorAll('[data-tab-panel]');
+      const storageKey = 'recommendationsTab';
+      const activate = (name) => {
+        buttons.forEach((btn) => {
+          const isActive = btn.dataset.tabButton === name;
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        panels.forEach((panel) => {
+          panel.classList.toggle('hidden', panel.dataset.tabPanel !== name);
+        });
+        localStorage.setItem(storageKey, name);
+      };
+      const saved = localStorage.getItem(storageKey);
+      activate(saved || tabRoot.dataset.initialTab || 'alerts');
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => activate(btn.dataset.tabButton));
+      });
+    })();
+
+    (function(){
+      const roots = document.querySelectorAll('[data-cat-root]');
+      roots.forEach((root) => {
+        const buttons = root.querySelectorAll('[data-cat-button]');
+        const panels = root.querySelectorAll('[data-cat-panel]');
+        const key = root.dataset.catKey || 'cat';
+        const storageKey = `recommendationsCat-${key}`;
+        const defaultCat = localStorage.getItem(storageKey) || root.dataset.defaultCat || 'numeric';
+        const activate = (name) => {
+          buttons.forEach((btn) => {
+            const active = btn.dataset.catButton === name;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+          panels.forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.catPanel !== name);
+          });
+          localStorage.setItem(storageKey, name);
+        };
+        activate(defaultCat);
+        buttons.forEach((btn) => btn.addEventListener('click', () => activate(btn.dataset.catButton)));
+      });
+    })();
+  </script>
+{% endblock %}

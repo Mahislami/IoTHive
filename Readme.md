@@ -204,6 +204,12 @@ This keeps the original workflow intact while making it easy to toggle optional 
 
 ---
 
+## 🧾 Deployment Report
+
+* **Outcome:** IoTHive now runs on a routable live network with the stack hardened (TLS-only ingress, locked-down Mosquitto, and nginx/Grafana auth) so it can safely serve external traffic.
+
+---
+
 ## 🤖 Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.

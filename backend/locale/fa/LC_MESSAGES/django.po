@@ -1465,6 +1465,147 @@ msgstr "کاربر «%(username)s» با موفقیت حذف شد."
 msgid "User \"%(username)s\" created successfully."
 msgstr "کاربر «%(username)s» با موفقیت ایجاد شد."
 
+#: devices/models.py:147
+msgid "Control Suggestion"
+msgstr "پیشنهاد کنترلی"
+
+#: devices/models.py:152 devices/templates/devices/monitoring/recommendations.html:3
+#: devices/templates/devices/monitoring/recommendations.html:14
+#: devices/views.py:128 devices/views.py:355
+msgid "Recommendations"
+msgstr "پیشنهادها"
+
+#: devices/templates/devices/monitoring/recommendations.html:15
+msgid "AI-assisted suggestions for alarms and device controls."
+msgstr "پیشنهادهای هوشمند برای آلارم‌ها و کنترل دستگاه‌ها."
+
+#: devices/views.py:128
+msgid "AI-assisted alarm and control suggestions"
+msgstr "پیشنهادهای هوشمند برای آلارم و کنترل"
+
+#: devices/templates/devices/monitoring/recommendations.html:47
+msgid "No high-priority suggestions right now."
+msgstr "در حال حاضر پیشنهاد مهمی وجود ندارد."
+
+#: devices/templates/devices/monitoring/recommendations.html:49
+msgid "No informational suggestions at the moment."
+msgstr "در حال حاضر پیشنهاد اطلاع‌رسانی وجود ندارد."
+
+#: devices/templates/devices/monitoring/recommendations_list.html:10
+msgid "implemented"
+msgstr "اعمال شده"
+
+#: devices/templates/devices/monitoring/recommendations_list.html:18
+msgid "Proposed range"
+msgstr "بازه پیشنهادی"
+
+#: devices/templates/devices/monitoring/recommendations_list.html:35
+msgid "Implement"
+msgstr "اعمال"
+
+#: devices/templates/devices/monitoring/recommendations_list.html:45
+msgid "Remove"
+msgstr "حذف"
+
+#: devices/templates/devices/monitoring/recommendations_list.html:57
+msgid "No recommendations right now."
+msgstr "در حال حاضر پیشنهادی وجود ندارد."
+
+#: devices/views.py:333
+#, python-format
+msgid "Recommendation \"%(title)s\" applied to %(device)s."
+msgstr "پیشنهاد «%(title)s» برای %(device)s اعمال شد."
+
+#: devices/templates/devices/monitoring/recommendations.html:56
+msgid "Other devices"
+msgstr "دستگاه‌های دیگر"
+
+#: devices/templates/devices/monitoring/recommendations.html:63
+#: devices/templates/devices/monitoring/recommendations.html:108
+msgid "No recommendations in this category."
+msgstr "در این دسته پیشنهادی وجود ندارد."
+
+# Recommendation strings (render-time localization)
+msgid "Data-driven thresholds for %(device)s"
+msgstr "آستانه‌های مبتنی بر داده برای %(device)s"
+
+msgid "Derived from recent telemetry (IsolationForest inliers p5–p95)."
+msgstr "بر اساس داده‌های اخیر (درون‌یابی IsolationForest بین صدک ۵ تا ۹۵)."
+
+msgid "Set %(device_type)s thresholds"
+msgstr "تنظیم آستانه‌های %(device_type)s"
+
+msgid "Based on current readings, apply tighter min/max bounds."
+msgstr "بر اساس قرائت‌های فعلی، محدوده حداقل/حداکثر را دقیق‌تر کنید."
+
+msgid "Add operator note for %(device)s"
+msgstr "افزودن یادداشت اپراتور برای %(device)s"
+
+msgid "Document expected behavior so alerts are actionable."
+msgstr "رفتار مورد انتظار را ثبت کنید تا هشدارها قابل اقدام باشند."
+
+msgid "Expected state for %(device_type)s"
+msgstr "وضعیت مورد انتظار برای %(device_type)s"
+
+msgid "Lock the expected state to reduce noise."
+msgstr "برای کاهش هشدارهای بی‌مورد، وضعیت مورد انتظار را قفل کنید."
+
+msgid "Alert when state changes unexpectedly."
+msgstr "در صورت تغییر غیرمنتظره وضعیت هشدار بده."
+
+msgid "Off-hours alert for %(device)s"
+msgstr "هشدار خارج از ساعات کاری برای %(device)s"
+
+msgid "Notify if this device toggles outside scheduled hours."
+msgstr "اگر این دستگاه خارج از زمان‌بندی تغییر وضعیت داد، اطلاع بده."
+
+msgid "Unexpected toggle outside schedule."
+msgstr "تغییر وضعیت غیرمنتظره خارج از برنامه."
+
+msgid "%(device_type)s safety band"
+msgstr "بازه ایمنی %(device_type)s"
+
+msgid "Apply bounds to catch overheating or abnormal power draw."
+msgstr "محدوده‌ای بگذارید تا گرم شدن یا مصرف غیرعادی توان شناسایی شود."
+
+msgid "Use appliance spec temperature range."
+msgstr "از بازه دمایی توصیه‌شده سازنده استفاده کنید."
+
+msgid "Maintenance reminder for %(device)s"
+msgstr "یادآور نگهداری برای %(device)s"
+
+msgid "Add a note about filter cleaning or descale intervals."
+msgstr "یادداشتی درباره زمان تمیز کردن فیلتر یا رسوب‌زدایی اضافه کنید."
+
+msgid "Track maintenance actions alongside alarms."
+msgstr "اقدامات نگهداری را همراه با هشدارها ثبت کنید."
+
+msgid "Baseline rule for %(device)s"
+msgstr "قانون پایه برای %(device)s"
+
+msgid "Add a default rule so alarms can be tuned later."
+msgstr "یک قانون پیش‌فرض اضافه کنید تا بعداً هشدارها تنظیم شوند."
+
+msgid "Temperature rule"
+msgstr "قانون دما"
+
+msgid "Power rule"
+msgstr "قانون توان"
+
+msgid "Reading thresholds"
+msgstr "آستانه‌های قرائت"
+
+msgid "Temperature thresholds (°C)"
+msgstr "آستانه‌های دما (°C)"
+
+msgid "Power thresholds (W)"
+msgstr "آستانه‌های توان (وات)"
+
+msgid "Min (°C)"
+msgstr "حداقل (°C)"
+
+msgid "Max (°C)"
+msgstr "حداکثر (°C)"
 #~ msgid "Back"
 #~ msgstr "بازگشت"
 

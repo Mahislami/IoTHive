@@ -24,7 +24,7 @@ from .appliances import (
     get_device_illustration,
 )
 from .forms import DeviceForm, KitchenApplianceForm, SignUpForm, StyledAuthenticationForm
-from .models import Device, UserProfile, AlarmRule, AlarmEvent
+from .models import Device, UserProfile, AlarmRule, AlarmEvent, Recommendation
 from .serializers import DeviceSerializer
 from .timers import supports_timer, start_timer, update_timer_runtime, timer_optional
 from .utils import (
@@ -441,10 +441,6 @@ def dashboard_view(request):
     grafana_base = _grafana_base_url(request)
     grafana_login_url = urljoin(grafana_base, "login")
     grafana_dashboards_url = urljoin(grafana_base, "dashboards")
-    grafana_power_url = urljoin(
-        grafana_base,
-        "d/e2e3ebfb-6d61-491c-8880-ff9d4a2cdaf5/energy-command-center?orgId=1",
-    )
 
     # Common item
     menu = [
@@ -458,12 +454,12 @@ def dashboard_view(request):
             "new_tab": True,
         },
         {
-            "key": "power_grafana",
-            "label": _("Power Usage"),
-            "href": grafana_power_url,
-            "desc": _("Track appliance energy consumption"),
-            "icon": "zap",
-            "requires_grafana_login": True,
+            "key": "recommendations",
+            "label": _("Recommendations"),
+            "href": reverse("devices:recommendations"),
+            "desc": _("AI-assisted alarm and control suggestions"),
+            "icon": "sparkles",
+            "requires_grafana_login": False,
         },
     ]
 
@@ -613,7 +609,12 @@ class UserDetailView(DetailView):
 def alarm_rules(request):
     # Devices + a map of active rule per device (single rule per device UX)
     devices = Device.objects.all().order_by("name")
-    rules_map = {r.device_id: r for r in AlarmRule.objects.filter(active=True)}
+    # Show any existing rules per device/metric so saved thresholds are visible for editing
+    rules_map = {}
+    for r in AlarmRule.objects.all():
+        if r.device_id not in rules_map:
+            rules_map[r.device_id] = {}
+        rules_map[r.device_id][r.metric] = r
     return render(
         request,
         "devices/monitoring/alarm_rules.html",
@@ -632,16 +633,34 @@ def alarm_rules(request):
 @require_POST
 def save_alarm_rule(request):
     device = get_object_or_404(Device, id=request.POST.get("device_id"))
-    rule, _ = AlarmRule.objects.get_or_create(device=device, defaults={"created_by": request.user})
+    metric = request.POST.get("metric")
+    field = request.POST.get("field")
+    if not metric:
+        if device.device_type in ("sensor", "thermostat") or device.device_type in APPLIANCE_SPECS:
+            metric = "temperature"
+        elif device.device_type in ("switch", "light", "actuator"):
+            metric = "state"
+        else:
+            metric = "reading"
+    if not field:
+        field = metric
 
-    # numeric (sensor/thermostat) vs boolean (switch/light/actuator)
-    if device.device_type in ("sensor", "thermostat"):
+    rule, created = AlarmRule.objects.get_or_create(
+        device=device,
+        metric=metric,
+        field=field,
+        defaults={"created_by": request.user}
+    )
+
+    # numeric (sensor/thermostat/appliances) vs boolean (switch/light/actuator)
+    if metric in ("temperature", "power_w", "reading"):
         mn = request.POST.get("min_value") or None
         mx = request.POST.get("max_value") or None
         rule.min_value = float(mn) if mn is not None else None
         rule.max_value = float(mx) if mx is not None else None
         rule.expected_state = None
-    else:
+        rule.field = field or metric
+    else:  # state expected for binary
         es = request.POST.get("expected_state")
         rule.expected_state = (es == "on") if es in ("on", "off") else None
         rule.min_value = None
@@ -696,6 +715,167 @@ def clear_alarm(request, event_id):
     ev.clear()
     return redirect("devices:active_alarms")
 
+
+@login_required
+@role_required("admin", "operator")
+def recommendations_view(request):
+    recs = (Recommendation.objects
+            .filter(dismissed=False)
+            .select_related("device")
+            .order_by("-created_at"))
+
+    def _localize_rec(rec):
+        title = rec.title or ""
+        msg = rec.message or ""
+        note = rec.target_note or ""
+        metric = rec.target_metric or ""
+
+        if title.startswith("Data-driven thresholds for "):
+            rec.title = _("Data-driven thresholds for %(device)s") % {"device": rec.device.name}
+            rec.message = _("Derived from recent telemetry (IsolationForest inliers p5–p95).")
+        elif title.startswith("Set ") and title.endswith(" thresholds"):
+            rec.title = _("Set %(device_type)s thresholds") % {"device_type": rec.device.get_device_type_display()}
+            rec.message = _("Based on current readings, apply tighter min/max bounds.")
+            if not rec.target_metric:
+                rec.target_metric = "temperature"
+        elif title.startswith("Expected state for "):
+            rec.title = _("Expected state for %(device_type)s") % {"device_type": rec.device.get_device_type_display()}
+            rec.message = _("Lock the expected state to reduce noise.")
+            rec.target_note = _("Alert when state changes unexpectedly.") if rec.target_note else ""
+            rec.target_metric = rec.target_metric or "state"
+        elif title.startswith("Off-hours alert for "):
+            rec.title = _("Off-hours alert for %(device)s") % {"device": rec.device.name}
+            rec.message = _("Notify if this device toggles outside scheduled hours.")
+            rec.target_note = _("Unexpected toggle outside schedule.")
+            rec.target_metric = rec.target_metric or "state"
+        elif title.endswith(" safety band"):
+            rec.title = _("%(device_type)s safety band") % {"device_type": rec.device.get_device_type_display()}
+            rec.message = _("Apply bounds to catch overheating or abnormal power draw.")
+            if note:
+                rec.target_note = _("Use appliance spec temperature range.")
+            rec.target_metric = rec.target_metric or "temperature"
+        elif title.startswith("Maintenance reminder for "):
+            rec.title = _("Maintenance reminder for %(device)s") % {"device": rec.device.name}
+            rec.message = _("Add a note about filter cleaning or descale intervals.")
+            rec.target_note = _("Track maintenance actions alongside alarms.")
+            rec.target_metric = rec.target_metric or "note"
+        elif title.startswith("Baseline rule for "):
+            rec.title = _("Baseline rule for %(device)s") % {"device": rec.device.name}
+            rec.message = _("Add a default rule so alarms can be tuned later.")
+            rec.target_metric = rec.target_metric or "temperature"
+        else:
+            rec.title = _(title)
+            rec.message = _(msg)
+            if note:
+                rec.target_note = _(note)
+            if not rec.target_metric:
+                rec.target_metric = "temperature"
+
+    for rec in recs:
+        _localize_rec(rec)
+
+    def _group(recommendations):
+        groups = {"numeric": [], "binary": [], "appliance": [], "other": []}
+        for rec in recommendations:
+            dtype = getattr(rec.device, "device_type", "")
+            if dtype in ("sensor", "thermostat"):
+                groups["numeric"].append(rec)
+            elif dtype in ("switch", "light", "actuator"):
+                groups["binary"].append(rec)
+            elif dtype in APPLIANCE_SPECS:
+                groups["appliance"].append(rec)
+            else:
+                groups["other"].append(rec)
+        return groups
+
+    def _default_cat(groups):
+        for key in ("numeric", "binary", "appliance", "other"):
+            if groups.get(key):
+                return key
+        return "numeric"
+
+    actionable = [
+        r for r in recs
+        if (r.target_min_value is not None
+            or r.target_max_value is not None
+            or r.target_expected_state is not None
+            or (r.target_note or "").strip())
+    ]
+
+    alerts = [r for r in actionable if r.severity in ("warn", "crit")]
+    notifications = [r for r in actionable if r.severity == "info"]
+    requested_tab = request.GET.get("tab")
+    if requested_tab not in {"alerts", "notifications"}:
+        requested_tab = "alerts" if alerts else "notifications"
+    return render(
+        request,
+        "devices/monitoring/recommendations.html",
+        {
+            "alerts": alerts,
+            "notifications": notifications,
+            "alerts_grouped": _group(alerts),
+            "notifications_grouped": _group(notifications),
+            "alerts_default_cat": _default_cat(_group(alerts)),
+            "notifications_default_cat": _default_cat(_group(notifications)),
+            "active_tab": requested_tab,
+            "user_display": request.user.username,
+            "role": getattr(getattr(request.user, "userprofile", None), "role", "visitor"),
+        },
+    )
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def acknowledge_recommendation(request, rec_id):
+    rec = get_object_or_404(Recommendation, id=rec_id, dismissed=False)
+    if not rec.acknowledged:
+        rec.acknowledged = True
+        rec.save(update_fields=["acknowledged", "updated_at"])
+    return redirect("devices:recommendations")
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def implement_recommendation(request, rec_id):
+    rec = get_object_or_404(Recommendation, id=rec_id, dismissed=False)
+    metric = rec.target_metric or "temperature"
+    rule, created = AlarmRule.objects.get_or_create(
+        device=rec.device,
+        metric=metric,
+        defaults={"created_by": request.user}
+    )
+    rule.min_value = rec.target_min_value
+    rule.max_value = rec.target_max_value
+    rule.expected_state = rec.target_expected_state
+    rule.severity = rec.target_severity or rec.severity or rule.severity
+    rule.note = rec.target_note or rec.title
+    rule.active = True
+    rule.save()
+
+    rec.implemented = True
+    rec.acknowledged = True
+    rec.save(update_fields=["implemented", "acknowledged", "updated_at"])
+
+    messages.success(
+        request,
+        _('Recommendation "%(title)s" applied to %(device)s.') % {
+            "title": rec.title,
+            "device": rec.device.name,
+        },
+    )
+    return redirect("devices:recommendations")
+
+
+@login_required
+@role_required("admin", "operator")
+@require_POST
+def dismiss_recommendation(request, rec_id):
+    rec = get_object_or_404(Recommendation, id=rec_id, dismissed=False)
+    rec.dismissed = True
+    rec.save(update_fields=["dismissed", "updated_at"])
+    return redirect("devices:recommendations")
 @login_required
 @role_required("admin", "operator")
 @require_POST

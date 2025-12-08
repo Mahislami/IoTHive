@@ -2,6 +2,7 @@ import json
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core import exceptions
 from django.utils import timezone
@@ -84,11 +85,24 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.role})"
     
+class MetricChoices(models.TextChoices):
+    TEMPERATURE = "temperature", _("temperature")
+    POWER_W = "power_w", _("power_w")
+    READING = "reading", _("reading")
+    STATE = "state", _("state")
+
+
 class AlarmRule(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='alarm_rules')
     active = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name='created_alarm_rules')
+    metric = models.CharField(
+        max_length=20,
+        choices=MetricChoices.choices,
+        default=MetricChoices.TEMPERATURE,
+    )
+    field = models.CharField(max_length=50, default="value")
     # numeric (sensor/thermostat)
     min_value = models.FloatField(null=True, blank=True)
     max_value = models.FloatField(null=True, blank=True)
@@ -140,3 +154,49 @@ class AlarmEvent(models.Model):
         self.is_active = False
         self.cleared_at = timezone.now()
         self.save(update_fields=['is_active', 'cleared_at'])
+
+
+class Recommendation(models.Model):
+    KIND_CHOICES = [
+        ('alarm_rule', _('Alarm Rule')),
+        ('control', _('Control Suggestion')),
+    ]
+    SEVERITY_CHOICES = [
+        ('info', _('Info')),
+        ('warn', _('Warning')),
+        ('crit', _('Critical')),
+    ]
+
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='recommendations')
+    title = models.CharField(max_length=200)
+    message = models.TextField(blank=True, default='')
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default='alarm_rule')
+    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default='warn')
+
+    # Target rule fields (used when "Implement" is clicked)
+    target_min_value = models.FloatField(null=True, blank=True)
+    target_max_value = models.FloatField(null=True, blank=True)
+    target_expected_state = models.BooleanField(null=True, blank=True)
+    target_severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default='warn')
+    target_note = models.CharField(max_length=200, blank=True, default='')
+    target_metric = models.CharField(
+        max_length=20,
+        choices=MetricChoices.choices,
+        null=True,
+        blank=True,
+    )
+    confidence = models.FloatField(default=0.5)
+
+    acknowledged = models.BooleanField(default=False)
+    implemented = models.BooleanField(default=False)
+    dismissed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['device', 'dismissed']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.device.name})"
