@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core import exceptions
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as gettext_now
 
 try:
     from django.db.models import JSONField as BuiltinJSONField
@@ -154,6 +154,47 @@ class AlarmEvent(models.Model):
         self.is_active = False
         self.cleared_at = timezone.now()
         self.save(update_fields=['is_active', 'cleared_at'])
+
+    @property
+    def localized_message(self):
+        """
+        Render the alarm message using the active locale instead of the
+        stored English text, so alarms respect the viewer's language.
+        """
+        rule = self.rule
+        device_name = self.device.name if self.device else ''
+
+        if rule:
+            metric = rule.metric or MetricChoices.TEMPERATURE
+
+            if metric != MetricChoices.STATE:
+                try:
+                    observed_val = float(self.observed_value)
+                except (TypeError, ValueError):
+                    observed_val = None
+
+                if observed_val is not None:
+                    if rule.min_value is not None and observed_val < rule.min_value:
+                        return gettext_now("%(device)s: value %(value)s below %(threshold)s") % {
+                            "device": device_name,
+                            "value": observed_val,
+                            "threshold": rule.min_value,
+                        }
+                    if rule.max_value is not None and observed_val > rule.max_value:
+                        return gettext_now("%(device)s: value %(value)s above %(threshold)s") % {
+                            "device": device_name,
+                            "value": observed_val,
+                            "threshold": rule.max_value,
+                        }
+
+            if metric == MetricChoices.STATE and rule.expected_state is not None:
+                state_value = self.observed_value or ('on' if rule.expected_state else 'off')
+                return gettext_now("%(device)s: state is %(state)s") % {
+                    "device": device_name,
+                    "state": gettext_now(state_value),
+                }
+
+        return self.message
 
 
 class Recommendation(models.Model):

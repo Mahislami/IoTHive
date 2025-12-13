@@ -48,6 +48,12 @@
               aria-selected="{% if active_tab == 'notifications' %}true{% else %}false{% endif %}">
         {% trans "Notifications" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ notifications|length }}</span>
       </button>
+      <button type="button"
+              class="px-4 py-2 rounded-xl border border-[color:var(--border)] text-sm"
+              data-tab-button="history"
+              aria-selected="{% if active_tab == 'history' %}true{% else %}false{% endif %}">
+        {% trans "History" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ history|length }}</span>
+      </button>
     </div>
     <div>
       <div data-tab-panel="alerts" class="{% if active_tab != 'alerts' %}hidden{% endif %}">
@@ -55,6 +61,9 @@
       </div>
       <div data-tab-panel="notifications" class="{% if active_tab != 'notifications' %}hidden{% endif %}">
         {% include "devices/monitoring/_alarm_list.html" with events_list=notifications empty_message=_("No notifications at the moment.") %}
+      </div>
+      <div data-tab-panel="history" class="{% if active_tab != 'history' %}hidden{% endif %}">
+        {% include "devices/monitoring/_alarm_list.html" with events_list=history show_actions=False empty_message=_("No cleared alarms in history.") %}
       </div>
     </div>
   </div>

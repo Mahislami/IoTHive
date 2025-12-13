@@ -26,6 +26,7 @@ services:
       <<: *default-logging
 
   backend:
+    image: iothive-backend:latest
     build:
       context: ./backend
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
@@ -71,8 +72,7 @@ services:
       <<: *default-logging
 
   celery:
-    build:
-      context: ./backend
+    image: iothive-backend:latest
     command: celery -A iothive worker --loglevel=info
     volumes:
       - ./backend:/app
@@ -100,8 +100,7 @@ services:
 
   # NEW: Celery Beat scheduler (triggers periodic tasks every 10s)
   celery-beat:
-    build:
-      context: ./backend
+    image: iothive-backend:latest
     command: celery -A iothive beat -l info
     volumes:
       - ./backend:/app

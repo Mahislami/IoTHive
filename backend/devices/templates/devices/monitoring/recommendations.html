@@ -52,108 +52,268 @@
               aria-selected="{% if active_tab == 'notifications' %}true{% else %}false{% endif %}">
         {% trans "Notifications" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ notifications|length }}</span>
       </button>
+      <button type="button"
+              class="px-4 py-2 rounded-xl border border-[color:var(--border)] text-sm"
+              data-tab-button="history"
+              aria-selected="{% if active_tab == 'history' %}true{% else %}false{% endif %}">
+        {% trans "History" %} <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10">{{ history_recs|length }}</span>
+      </button>
     </div>
     <div>
       <div data-tab-panel="alerts" class="{% if active_tab != 'alerts' %}hidden{% endif %}">
-        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-cat-key="alerts" data-default-cat="{{ alerts_default_cat }}">
+        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-default-cat="{{ alerts_default_cat }}">
           <div class="flex flex-wrap gap-2 mb-4">
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">
-              {% trans "Numeric (Sensors, Thermostats)" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">
-              {% trans "Binary (Switches, Lights, Actuators)" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">
-              {% trans "Kitchen Appliances" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">
-              {% trans "Other devices" %}
-            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">{% trans "Numeric (Sensors, Thermostats)" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">{% trans "Binary (Switches, Lights, Actuators)" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">{% trans "Kitchen Appliances" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">{% trans "Other devices" %}</button>
           </div>
-          <div class="space-y-4">
-            <div data-cat-panel="numeric" class="hidden">
-              {% if alerts_grouped.numeric %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.numeric %}
+          {% for cat_key, cat_list in alerts_grouped.items %}
+            <div data-cat-panel="{{ cat_key }}" class="hidden space-y-4">
+              {% if cat_list %}
+                {% for rec in cat_list %}
+                  <div class="border rounded-2xl p-4 animate-fade-in {% if rec.severity == 'crit' %}sev-crit{% elif rec.severity == 'warn' %}sev-warn{% else %}sev-info{% endif %}">
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="min-w-0">
+                        <div class="text-sm text-[color:var(--text-secondary)] flex flex-wrap items-center gap-2">
+                          {{ rec.created_at|date:"Y-m-d H:i" }}
+                          {% if rec.acknowledged %}
+                            <span class="px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "acknowledged" %}</span>
+                          {% endif %}
+                          {% if rec.implemented %}
+                            <span class="px-2 py-0.5 rounded-md border border-[color:var(--accent-success)] text-xs text-[color:var(--accent-success)]">{% trans "implemented" %}</span>
+                          {% endif %}
+                        </div>
+                        <div class="mt-1 font-semibold">{{ rec.title }}</div>
+                        <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                          {{ rec.device_name }}
+                          {% if rec.metric %}
+                            <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs text-[color:var(--text-secondary)]">
+                              {% if rec.metric == "temperature" %}{% trans "Temperature" %}
+                              {% elif rec.metric == "power_w" %}{% trans "Power" %}
+                              {% elif rec.metric == "reading" %}{% trans "Reading" %}
+                              {% elif rec.metric == "state" %}{% trans "State" %}
+                              {% else %}{{ rec.metric }}{% endif %}
+                            </span>
+                          {% endif %}
+                           — {{ rec.message }}
+                        </div>
+                        {% if rec.target_min_value is not None or rec.target_max_value is not None %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                            {% trans "Proposed range" %}:
+                            {% if rec.target_min_value is not None %}{{ rec.target_min_value|floatformat:2 }}{% else %}—{% endif %}
+                            /
+                            {% if rec.target_max_value is not None %}{{ rec.target_max_value|floatformat:2 }}{% else %}—{% endif %}
+                          </div>
+                        {% endif %}
+                        {% if rec.target_expected_state is not None %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                            {% trans "Expected state" %}: {% if rec.target_expected_state %}{% trans "On" %}{% else %}{% trans "Off" %}{% endif %}
+                          </div>
+                        {% endif %}
+                        {% if rec.target_note %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">{% trans "Note" %}: {{ rec.target_note }}</div>
+                        {% endif %}
+                      </div>
+                      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                        <form method="post" action="{% url 'devices:implement_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="alerts"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  {% if rec.implemented %}disabled{% endif %}>
+                            {% trans "Implement" %}
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'devices:ack_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="alerts"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  {% if rec.acknowledged %}disabled{% endif %}>
+                            {% trans "Acknowledge" %}
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'devices:dismiss_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="alerts"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg bg-[color:var(--accent-error)]/15 border border-[color:var(--accent-error)] hover:bg-[color:var(--accent-error)]/25">
+                            {% trans "Remove" %}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
               {% else %}
                 <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
               {% endif %}
             </div>
-            <div data-cat-panel="binary" class="hidden">
-              {% if alerts_grouped.binary %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.binary %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            <div data-cat-panel="appliance" class="hidden">
-              {% if alerts_grouped.appliance %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.appliance %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            <div data-cat-panel="other" class="hidden">
-              {% if alerts_grouped.other %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=alerts_grouped.other %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            {% if not alerts %}
-              <div class="text-[color:var(--text-secondary)]">{% trans "No high-priority suggestions right now." %}</div>
-            {% endif %}
-          </div>
+          {% endfor %}
+          {% if not alerts %}
+            <div class="text-[color:var(--text-secondary)]">{% trans "No high-priority suggestions right now." %}</div>
+          {% endif %}
         </div>
       </div>
       <div data-tab-panel="notifications" class="{% if active_tab != 'notifications' %}hidden{% endif %}">
-        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-cat-key="notifications" data-default-cat="{{ notifications_default_cat }}">
+        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5" data-cat-root data-default-cat="{{ notifications_default_cat }}" data-tab-key="notifications">
           <div class="flex flex-wrap gap-2 mb-4">
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">
-              {% trans "Numeric (Sensors, Thermostats)" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">
-              {% trans "Binary (Switches, Lights, Actuators)" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">
-              {% trans "Kitchen Appliances" %}
-            </button>
-            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">
-              {% trans "Other devices" %}
-            </button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="numeric">{% trans "Numeric (Sensors, Thermostats)" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="binary">{% trans "Binary (Switches, Lights, Actuators)" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="appliance">{% trans "Kitchen Appliances" %}</button>
+            <button type="button" class="cat-btn px-3 py-1 rounded-lg border border-[color:var(--border)] text-sm" data-cat-button="other">{% trans "Other devices" %}</button>
           </div>
-          <div class="space-y-4">
-            <div data-cat-panel="numeric" class="hidden">
-              {% if notifications_grouped.numeric %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.numeric %}
+          {% for cat_key, cat_list in notifications_grouped.items %}
+            <div data-cat-panel="{{ cat_key }}" class="hidden space-y-4">
+              {% if cat_list %}
+                {% for rec in cat_list %}
+                  <div class="border rounded-2xl p-4 animate-fade-in {% if rec.severity == 'crit' %}sev-crit{% elif rec.severity == 'warn' %}sev-warn{% else %}sev-info{% endif %}">
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="min-w-0">
+                        <div class="text-sm text-[color:var(--text-secondary)] flex flex-wrap items-center gap-2">
+                          {{ rec.created_at|date:"Y-m-d H:i" }}
+                          {% if rec.acknowledged %}
+                            <span class="px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "acknowledged" %}</span>
+                          {% endif %}
+                          {% if rec.implemented %}
+                            <span class="px-2 py-0.5 rounded-md border border-[color:var(--accent-success)] text-xs text-[color:var(--accent-success)]">{% trans "implemented" %}</span>
+                          {% endif %}
+                        </div>
+                        <div class="mt-1 font-semibold">{{ rec.title }}</div>
+                        <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                          {{ rec.device_name }}
+                          {% if rec.metric %}
+                            <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs text-[color:var(--text-secondary)]">
+                              {% if rec.metric == "temperature" %}{% trans "Temperature" %}
+                              {% elif rec.metric == "power_w" %}{% trans "Power" %}
+                              {% elif rec.metric == "reading" %}{% trans "Reading" %}
+                              {% elif rec.metric == "state" %}{% trans "State" %}
+                              {% else %}{{ rec.metric }}{% endif %}
+                            </span>
+                          {% endif %}
+                           — {{ rec.message }}
+                        </div>
+                        {% if rec.target_min_value is not None or rec.target_max_value is not None %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                            {% trans "Proposed range" %}:
+                            {% if rec.target_min_value is not None %}{{ rec.target_min_value|floatformat:2 }}{% else %}—{% endif %}
+                            /
+                            {% if rec.target_max_value is not None %}{{ rec.target_max_value|floatformat:2 }}{% else %}—{% endif %}
+                          </div>
+                        {% endif %}
+                        {% if rec.target_expected_state is not None %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                            {% trans "Expected state" %}: {% if rec.target_expected_state %}{% trans "On" %}{% else %}{% trans "Off" %}{% endif %}
+                          </div>
+                        {% endif %}
+                        {% if rec.target_note %}
+                          <div class="text-sm text-[color:var(--text-secondary)] mt-1">{% trans "Note" %}: {{ rec.target_note }}</div>
+                        {% endif %}
+                      </div>
+                      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                        <form method="post" action="{% url 'devices:implement_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="notifications"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg bg-[color:var(--accent-primary)]/20 border border-[color:var(--accent-primary)] hover:bg-[color:var(--accent-primary)]/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  {% if rec.implemented %}disabled{% endif %}>
+                            {% trans "Implement" %}
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'devices:ack_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="notifications"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)] disabled:opacity-60 disabled:cursor-not-allowed"
+                                  {% if rec.acknowledged %}disabled{% endif %}>
+                            {% trans "Acknowledge" %}
+                          </button>
+                        </form>
+                        <form method="post" action="{% url 'devices:dismiss_recommendation' rec.id %}">
+                          {% csrf_token %}
+                          <input type="hidden" name="tab" value="notifications"/>
+                          <input type="hidden" name="cat" value="" data-cat-input>
+                          <button class="w-full px-3 py-1 rounded-lg bg-[color:var(--accent-error)]/15 border border-[color:var(--accent-error)] hover:bg-[color:var(--accent-error)]/25">
+                            {% trans "Remove" %}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
               {% else %}
                 <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
               {% endif %}
             </div>
-            <div data-cat-panel="binary" class="hidden">
-              {% if notifications_grouped.binary %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.binary %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            <div data-cat-panel="appliance" class="hidden">
-              {% if notifications_grouped.appliance %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.appliance %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            <div data-cat-panel="other" class="hidden">
-              {% if notifications_grouped.other %}
-                {% include "devices/monitoring/recommendations_list.html" with recs_list=notifications_grouped.other %}
-              {% else %}
-                <div class="text-[color:var(--text-secondary)]">{% trans "No recommendations in this category." %}</div>
-              {% endif %}
-            </div>
-            {% if not notifications %}
-              <div class="text-[color:var(--text-secondary)]">{% trans "No informational suggestions at the moment." %}</div>
-            {% endif %}
-          </div>
+          {% endfor %}
+          {% if not notifications %}
+            <div class="text-[color:var(--text-secondary)]">{% trans "No informational suggestions at the moment." %}</div>
+          {% endif %}
+        </div>
+      </div>
+      <div data-tab-panel="history" class="{% if active_tab != 'history' %}hidden{% endif %}">
+        <div class="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-2xl p-5 space-y-4">
+          {% if history_recs %}
+            {% for rec in history_recs %}
+              <div class="border rounded-2xl p-4 animate-fade-in {% if rec.severity == 'crit' %}sev-crit{% elif rec.severity == 'warn' %}sev-warn{% else %}sev-info{% endif %}">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <div class="text-sm text-[color:var(--text-secondary)] flex flex-wrap items-center gap-2">
+                      {{ rec.created_at|date:"Y-m-d H:i" }}
+                      {% if rec.updated_at %}
+                        <span class="px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "updated" %}: {{ rec.updated_at|date:"Y-m-d H:i" }}</span>
+                      {% endif %}
+                      {% if rec.acknowledged %}
+                        <span class="px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "acknowledged" %}</span>
+                      {% endif %}
+                      {% if rec.implemented %}
+                        <span class="px-2 py-0.5 rounded-md border border-[color:var(--accent-success)] text-xs text-[color:var(--accent-success)]">{% trans "implemented" %}</span>
+                      {% endif %}
+                      {% if rec.dismissed %}
+                        <span class="px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "dismissed" %}</span>
+                      {% endif %}
+                    </div>
+                    <div class="mt-1 font-semibold">{{ rec.title }}</div>
+                    <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                      {{ rec.device.name }}
+                      {% if rec.target_metric %}
+                        <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs text-[color:var(--text-secondary)]">
+                          {% if rec.target_metric == "temperature" %}{% trans "Temperature" %}
+                          {% elif rec.target_metric == "power_w" %}{% trans "Power" %}
+                          {% elif rec.target_metric == "reading" %}{% trans "Reading" %}
+                          {% elif rec.target_metric == "state" %}{% trans "State" %}
+                          {% else %}{{ rec.target_metric }}{% endif %}
+                        </span>
+                      {% endif %}
+                       — {{ rec.message }}
+                    </div>
+                    {% if rec.target_min_value is not None or rec.target_max_value is not None %}
+                      <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                        {% trans "Proposed range" %}:
+                        {% if rec.target_min_value is not None %}{{ rec.target_min_value|floatformat:2 }}{% else %}—{% endif %}
+                        /
+                        {% if rec.target_max_value is not None %}{{ rec.target_max_value|floatformat:2 }}{% else %}—{% endif %}
+                      </div>
+                    {% endif %}
+                    {% if rec.target_expected_state is not None %}
+                      <div class="text-sm text-[color:var(--text-secondary)] mt-1">
+                        {% trans "Expected state" %}: {% if rec.target_expected_state %}{% trans "On" %}{% else %}{% trans "Off" %}{% endif %}
+                      </div>
+                    {% endif %}
+                    {% if rec.target_note %}
+                      <div class="text-sm text-[color:var(--text-secondary)] mt-1">{% trans "Note" %}: {{ rec.target_note }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="text-xs text-[color:var(--text-secondary)] shrink-0">
+                    {% trans "Archived entry" %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-[color:var(--text-secondary)]">{% trans "No archived recommendations yet." %}</div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -188,8 +348,9 @@
       roots.forEach((root) => {
         const buttons = root.querySelectorAll('[data-cat-button]');
         const panels = root.querySelectorAll('[data-cat-panel]');
-        const key = root.dataset.catKey || 'cat';
-        const storageKey = `recommendationsCat-${key}`;
+        const inputs = root.querySelectorAll('[data-cat-input]');
+        const tabKey = root.dataset.tabKey || 'default';
+        const storageKey = `recommendationsCat-${tabKey}`;
         const defaultCat = localStorage.getItem(storageKey) || root.dataset.defaultCat || 'numeric';
         const activate = (name) => {
           buttons.forEach((btn) => {
@@ -200,6 +361,7 @@
           panels.forEach((panel) => {
             panel.classList.toggle('hidden', panel.dataset.catPanel !== name);
           });
+          inputs.forEach((inp) => { inp.value = name; });
           localStorage.setItem(storageKey, name);
         };
         activate(defaultCat);

@@ -1,8 +1,10 @@
+from functools import wraps
 from django.core.exceptions import PermissionDenied
 
 def role_required(*allowed_roles):
     """Allow only users whose UserProfile.role is in allowed_roles."""
     def decorator(view_func):
+        @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             role = getattr(getattr(request.user, "userprofile", None), "role", "visitor")
             if role in allowed_roles:

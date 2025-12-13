@@ -1520,8 +1520,8 @@ msgstr "پیشنهاد «%(title)s» برای %(device)s اعمال شد."
 msgid "Other devices"
 msgstr "دستگاه‌های دیگر"
 
-#: devices/templates/devices/monitoring/recommendations.html:63
-#: devices/templates/devices/monitoring/recommendations.html:108
+#: devices/templates/devices/monitoring/recommendations.html:60
+#: devices/templates/devices/monitoring/recommendations.html:87
 msgid "No recommendations in this category."
 msgstr "در این دسته پیشنهادی وجود ندارد."
 
@@ -1606,6 +1606,16 @@ msgstr "حداقل (°C)"
 
 msgid "Max (°C)"
 msgstr "حداکثر (°C)"
+
+# Alarm messages
+msgid "%(device)s: value %(value)s below %(threshold)s"
+msgstr "%(device)s: مقدار %(value)s کمتر از %(threshold)s است"
+
+msgid "%(device)s: value %(value)s above %(threshold)s"
+msgstr "%(device)s: مقدار %(value)s بیشتر از %(threshold)s است"
+
+msgid "%(device)s: state is %(state)s"
+msgstr "%(device)s: وضعیت %(state)s است"
 #~ msgid "Back"
 #~ msgstr "بازگشت"
 

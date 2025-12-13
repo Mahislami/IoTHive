@@ -11,8 +11,23 @@
               {% if ev.acknowledged %}
                 <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "acknowledged" %}</span>
               {% endif %}
+              {% if not ev.is_active and ev.cleared_at %}
+                <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs">{% trans "cleared" %}: {{ ev.cleared_at|date:"Y-m-d H:i" }}</span>
+              {% endif %}
             </div>
-            <div class="mt-1"><span class="font-semibold">{{ ev.device.name }}</span> — {{ ev.message }}</div>
+            <div class="mt-1">
+              <span class="font-semibold">{{ ev.device.name }}</span>
+              {% if ev.rule and ev.rule.metric %}
+                <span class="ml-2 px-2 py-0.5 rounded-md border border-[color:var(--border)] text-xs text-[color:var(--text-secondary)]">
+                  {% if ev.rule.metric == "temperature" %}{% trans "Temperature" %}
+                  {% elif ev.rule.metric == "power_w" %}{% trans "Power" %}
+                  {% elif ev.rule.metric == "reading" %}{% trans "Reading" %}
+                  {% elif ev.rule.metric == "state" %}{% trans "State" %}
+                  {% else %}{{ ev.rule.metric }}{% endif %}
+                </span>
+              {% endif %}
+               — {{ ev.localized_message }}
+            </div>
             {% if ev.observed_value %}
               <div class="text-sm text-[color:var(--text-secondary)] mt-1">{% trans "Observed" %}: {{ ev.observed_value }}</div>
             {% endif %}
@@ -20,16 +35,18 @@
               <div class="text-sm text-[color:var(--text-secondary)] mt-1">{% trans "Note" %}: {{ ev.rule.note }}</div>
             {% endif %}
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <form method="post" action="{% url 'devices:ack_alarm' ev.id %}">
-              {% csrf_token %}
-              <button class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Acknowledge" %}</button>
-            </form>
-            <form method="post" action="{% url 'devices:clear_alarm' ev.id %}">
-              {% csrf_token %}
-              <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-success)]/20 border border-[color:var(--accent-success)] hover:bg-[color:var(--accent-success)]/30">{% trans "Clear" %}</button>
-            </form>
-          </div>
+          {% if show_actions|default:True %}
+            <div class="flex items-center gap-2 shrink-0">
+              <form method="post" action="{% url 'devices:ack_alarm' ev.id %}">
+                {% csrf_token %}
+                <button class="px-3 py-1 rounded-lg border border-[color:var(--border)] hover:bg-[color:var(--surface)]">{% trans "Acknowledge" %}</button>
+              </form>
+              <form method="post" action="{% url 'devices:clear_alarm' ev.id %}">
+                {% csrf_token %}
+                <button class="px-3 py-1 rounded-lg bg-[color:var(--accent-success)]/20 border border-[color:var(--accent-success)] hover:bg-[color:var(--accent-success)]/30">{% trans "Clear" %}</button>
+              </form>
+            </div>
+          {% endif %}
         </div>
       </div>
     {% endfor %}
