@@ -20,10 +20,10 @@ def debug_task(self):
 # Define periodic task schedule
 # -------------------------------------------------------------------
 app.conf.beat_schedule = {
-    # Run the new ticker every 10s (only thermostat + actuator update)
-    'tick-dynamic-every-10s': {
+    # Run the device ticker every 30s (publishes MQTT updates)
+    'tick-dynamic-every-30s': {
         'task': 'devices.tasks.tick_dynamic_devices',
-        'schedule': 10.0,
+        'schedule': 30.0,
     },
 
     # Optional: re-run initialization once a day at midnight (if you want).

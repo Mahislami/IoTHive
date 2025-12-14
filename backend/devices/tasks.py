@@ -313,7 +313,7 @@ def simulate_device_activity():
 # --------------------------------------------------------------------
 # New flow you asked for:
 #   1) initialize_device_state(): one-off, sets and publishes initial values.
-#   2) tick_dynamic_devices(): every 10s, only thermostat + actuator update.
+#   2) tick_dynamic_devices(): every 30s, only thermostat + actuator update.
 #      lights/switches DO NOT change unless your form changes them.
 # --------------------------------------------------------------------
 
@@ -425,7 +425,7 @@ def initialize_device_state():
 @shared_task
 def tick_dynamic_devices():
     """
-    Run every 10 seconds.
+    Run every 30 seconds.
 
     - thermostat: drift temperature slightly and publish (persist in metadata)
     - actuator: small movement and publish (persist in metadata)
